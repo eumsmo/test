@@ -1,0 +1,63 @@
+html{
+  height: 100%;
+}
+
+body{
+  margin: 0;
+  height: 100%;
+  background-color: black;
+  display: flex;
+  align-items: center;
+}
+
+.div_hitbox{
+  border: red 1px solid;
+  box-sizing: border-box;
+  position: absolute;
+}
+
+figure{
+  display: inline-block;
+  margin: 0;
+  position: absolute;
+}
+
+figure img{
+  width: 100%;
+}
+
+#box{
+  width: 500px;
+  height: 250px;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0 auto;
+}
+
+#box .lado{
+  position: absolute;
+  background-color: white;
+  min-width: 10px;
+  min-height: 10px;
+  display: block;
+}
+
+#box-cima{
+  top: 0;
+  width: 100%;
+}
+
+#box-baixo{
+  bottom: 0;
+  width: 100%;
+}
+
+#box-esquerda{
+  left: 0;
+  height: 100%;
+}
+
+#box-direita{
+  right: 0;
+  height: 100%;
+}
