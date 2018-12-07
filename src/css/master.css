@@ -8,6 +8,7 @@ body{
   background-color: black;
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 .div_hitbox{
@@ -34,30 +35,35 @@ figure img{
   margin: 0 auto;
 }
 
-#box .lado{
+.lado{
   position: absolute;
-  background-color: white;
-  min-width: 10px;
-  min-height: 10px;
+  width: 10px;
+  height: 10px;
   display: block;
 }
 
-#box-cima{
-  top: 0;
+#box .lado{
+  background-color: white;
+}
+
+.top{
+  top: 0; left: -50%;
+  transform: translateX(50%);
   width: 100%;
 }
 
-#box-baixo{
-  bottom: 0;
+.bottom{
+  bottom: 0;left: -50%;
+  transform: translateX(50%);
   width: 100%;
 }
 
-#box-esquerda{
+.left{
   left: 0;
   height: 100%;
 }
 
-#box-direita{
+.right{
   right: 0;
   height: 100%;
 }

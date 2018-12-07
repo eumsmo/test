@@ -116,10 +116,11 @@ class DOMBlock extends DOM_Hitbox{
     this.setContext("block");
   }
 
-  static selectTransform(slc){
+  static selectTransform(slc,call){
     let allElsMatch = document.querySelectorAll(slc), arr = [];
     allElsMatch.forEach(el=>{
       let block = new DOMBlock(el);
+      if(call)call(block);
       arr.push(block);
     });
 

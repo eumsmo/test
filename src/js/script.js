@@ -1,7 +1,7 @@
 const Keyboard = new Teclado();
 const Caixa = new Box();
 
-DOMBlock.selectTransform("#box .lado");
+DOMBlock.selectTransform("#box .spawn");
 Caixa._shouldItemsMove = true;
 Caixa._moveItems();
 

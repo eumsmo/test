@@ -2,6 +2,7 @@ const ladoCaixa = 10;
 class Box{
   constructor() {
     this.el = document.querySelector("#box");
+
     this.speed = 1;
 
     this._itemsToMove = [];
