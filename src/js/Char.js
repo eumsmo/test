@@ -22,6 +22,18 @@ class Movable extends DOM_Hitbox{
     document.body.appendChild(this.el);
   }
 
+  get directions(){
+    let arr = [];
+
+    if(this.dy == 1) arr.push("bottom");
+    else if(this.dy == -1) arr.push("top");
+
+    if(this.dx == 1) arr.push("right");
+    else if(this.dx == -1) arr.push("left");
+
+    return arr;
+  }
+
   setDir(dx,dy){
     if(dx!=undefined) this.dx=dx;
     if(dy!=undefined) this.dy=dy;
@@ -68,10 +80,19 @@ class Personagem extends Movable{
     this.type= "char";
     this.looker = true;
     this.watchedContexts = ["block","projeteis"];
+
+    this.hp = 100;
+  }
+
+  get direction(){
+    if(this.dx = 0){
+      if(this.dy == 1) return
+    }
   }
 
   ["proj"](o,d){
-    //console.log("ouch");
+    this.hp -= o.hit;
+    console.log(this.hp);
   }
 
   ["$!pass"](o,d){
@@ -137,6 +158,17 @@ class Projetil extends Movable{
       console.log('a');
       this.removeItem();
     }
+  }
+}
+
+class ConstantProj extends Projetil{
+  constructor(x,y,options){
+    super(x,y,options);
+  }
+
+  $char(o,d){
+    o.proj(this,d);
+    //this.removeItem();
   }
 }
 

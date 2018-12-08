@@ -76,10 +76,11 @@ class Battle{
     this.main = main;
 
     this.running = true;
+    this.speed = 1;
   }
 
   randDir(){
-    let dir = ["top","left","down","right"];
+    let dir = ["top","left","bottom","right"];
     return dir[randInt(0,4)];
   }
 
@@ -90,7 +91,7 @@ class Battle{
     };
   }
 
-  generateProj(name,every){
+  generateProj({name,every}){
     let reg = this._projeteisReg[name],
       proj = new Projetil(100,100,{
         width: 15,
@@ -104,18 +105,17 @@ class Battle{
     });
 
     if(every!=undefined && this.running){
-      setTimeout(()=>this.generateProj(name,every),every*1000);
+      setTimeout(()=>this.generateProj({name,every}),every*1000);
     }
   }
 
-  foo(){
-    setTimeout(()=>this.end(),30*1000);
-
-    this.registerProj("test1","src/img/spr_bulletmd_0.png",(proj,{box, main})=>{
-      let dir = this.randDir(), border = box.border;
-      //console.log(border);
-      //console.log(dir);
-      //dir = "down";
+  proj1(proj,{box,main}){
+    let dir = this.randDir(), border = box.border;
+    proj.hit = 15;
+    //console.log(border);
+    //console.log(dir);
+    //dir = "down";
+    if(main.dx==0 && main.dy==0){
       switch(dir){
         case "right":
           proj.x = border.right;
@@ -132,17 +132,49 @@ class Battle{
           proj.x = main.x;
           proj.setDir(0,1);
           break;
-        case "down":
+        case "bottom":
           proj.y = border.bottom;
           proj.x = main.x;
           proj.setDir(0,-1);
           break;
       }
+    }
+    else{
+      let dirs = [-main.dx,-main.dy];
+      if(dirs[0]==-1) proj.x = border.right;
+      else if(dirs[0]==1) proj.x = border.left-proj.height;
+      else proj.x = main.x;
 
-      box.insertItem(proj);
+      if(dirs[1]==-1) proj.y = border.bottom;
+      else if(dirs[1]==1) proj.y = border.top-proj.width;
+      else proj.y = main.y;
+
+      proj.setDir(-main.dx,-main.dy);
+    }
+
+    box.insertItem(proj);
+  }
+
+
+  foo(){
+    setTimeout(()=>this.end(),30*1000);
+
+    this.registerProj("test1","src/img/spr_bulletmd_0.png",this.proj1.bind(this));
+    let that = this;
+
+    this.generateProj({
+      name: "test1",
+      get every(){
+          return that.speed*0.5;
+      }
     });
 
-    this.generateProj("test1",1);
+    let box = this.box;
+
+    setInterval(()=>{
+      box.speed=9*box.speed/10;
+      console.log(box.speed);
+    },1000);
   }
 
   end(){
