@@ -38,10 +38,11 @@ class Hitbox {
       }
     } else {
       let context = Hitbox.all[sContext];
-      for(let box of context){
-        if(box && !this.isItself(box) && this.isOver(box))
-          return box;
-      }
+      if(context)
+        for(let box of context){
+          if(box && !this.isItself(box) && this.isOver(box))
+            return box;
+        }
     }
 
     return false;

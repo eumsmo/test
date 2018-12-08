@@ -16,12 +16,19 @@ class Box{
   }
 
   get border(){
-    let pos = this.pos;
+    // return {
+    // let pos = this.pos;
+    //   top: pos.top+ladoCaixa,
+    //   left: pos.left+ladoCaixa,
+    //   right: pos.left+pos.width-ladoCaixa,
+    //   bottom: pos.top+pos.height-ladoCaixa
+    // }
+    let pos = document.body;
     return {
-      top: pos.top+ladoCaixa,
-      left: pos.left+ladoCaixa,
-      right: pos.left+pos.width-ladoCaixa,
-      bottom: pos.top+pos.height-ladoCaixa
+      top: pos.scrollTop,
+      left: pos.scrollLeft,
+      right: pos.scrollLeft+pos.scrollWidth,
+      bottom: pos.scrollTop+pos.scrollHeight
     }
   }
 
@@ -45,7 +52,10 @@ class Box{
     if(this._shouldItemsMove){
       this._itemsToMove.forEach(item=> {
         if(item!=null){
-          if(item.exists) item.move();
+          if(item.exists){
+            item.move();
+            item.outBounds(this.border);
+          }
           else this.removeItem(item.id);
         }
       });
@@ -105,24 +115,25 @@ class Battle{
       let dir = this.randDir(), border = box.border;
       //console.log(border);
       //console.log(dir);
+      //dir = "down";
       switch(dir){
         case "right":
-          proj.x = border.right-proj.width-0.5;
+          proj.x = border.right;
           proj.y = main.y;
           proj.setDir(-1,0);
           break;
         case "left":
-          proj.x = border.left;
+          proj.x = border.left-proj.height;
           proj.y = main.y;
           proj.setDir(1,0);
           break;
         case "top":
-          proj.y = border.top+0.5;
+          proj.y = border.top-proj.width;
           proj.x = main.x;
           proj.setDir(0,1);
           break;
         case "down":
-          proj.y = border.bottom-proj.height-0.5;
+          proj.y = border.bottom;
           proj.x = main.x;
           proj.setDir(0,-1);
           break;
@@ -131,7 +142,7 @@ class Battle{
       box.insertItem(proj);
     });
 
-    this.generateProj("test1",0.5);
+    this.generateProj("test1",1);
   }
 
   end(){

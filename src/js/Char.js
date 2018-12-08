@@ -67,17 +67,41 @@ class Personagem extends Movable{
     super(x,y,options);
     this.type= "char";
     this.looker = true;
-    this.watchedContexts = ["projeteis","block"];
+    this.watchedContexts = ["block","projeteis"];
+  }
+
+  ["proj"](o,d){
+    //console.log("ouch");
   }
 
   ["$!pass"](o,d){
     let {direction, trigger} = d;
-
+    //console.log(direction);
     if(direction=="v"){
-      this.y-=this.speed*this.dy;
+
+      if(this.dy==-1)this.y = o.y+o.height+0.5;
+      else if(this.dy==1)this.y = o.y-this.height-0.5;
+
+
+      //Solução para dentro do bloco
+      /*
+      if(this.dy==-1  && this.y<o.y+o.height) this.y = o.y+o.height+0.5;
+      else if(this.dy==1  && this.y+this.height>o.y) this.y = o.y-this.height-0.5;
+      */
+      //this.y-=this.speed*this.dy;
     }
     else if(direction=="h"){
-      this.x-=this.speed*this.dx;
+
+      if(this.dx==-1)this.x = o.x+o.width+0.5;
+      else if(this.dx==1)this.x = o.x-this.width-0.5;
+
+
+      //Solução para dentro do bloco
+      /*
+      if(this.dx==-1  && this.x<o.x+o.width) this.x = o.x+o.width+0.5;
+      else if(this.dx==1  && this.x+this.width>o.x) this.x = o.x-this.width-0.5;
+      */
+      //this.x-=this.speed*this.dx;
     }
 
   }
@@ -89,15 +113,30 @@ class Projetil extends Movable{
     this.type= "proj";
     this.looker = true;
     this.setContext("projeteis");
-    this.watchedContexts = ["block","main"];
+    this.watchedContexts = ["main"];
   }
 
-  $char(){
+  $char(o,d){
+    o.proj(this,d);
     this.removeItem();
   }
 
   ["$!pass"](){
     this.removeItem();
+  }
+
+  outBounds(box){
+    let comp = [
+      (this.x < box.left - this.width),
+      (this.x > box.right),
+      (this.y < box.top - this.height),
+      (this.y > box.bottom)
+    ];
+    //console.log(comp);
+    if(comp[0]||comp[1]||comp[2]||comp[3]){
+      console.log('a');
+      this.removeItem();
+    }
   }
 }
 
