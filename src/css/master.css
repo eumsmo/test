@@ -12,12 +12,6 @@ body{
   overflow: hidden;
 }
 
-.div_hitbox{
-  border: red 1px solid;
-  box-sizing: border-box;
-  position: absolute;
-}
-
 figure{
   display: inline-block;
   margin: 0;
@@ -26,6 +20,7 @@ figure{
 
 figure img{
   width: 100%;
+  height: 100%;
 }
 
 #box{
@@ -52,14 +47,14 @@ figure img{
 }
 
 .top{
-  top: 0; left: -50%;
-  transform: translateX(50%);
+  top: 0; /*left: -50%;
+  transform: translateX(50%);*/
   width: 100%;
 }
 
 .bottom{
-  bottom: 0;left: -50%;
-  transform: translateX(50%);
+  bottom: 0;/*left: -50%;
+  transform: translateX(50%);*/
   width: 100%;
 }
 
@@ -71,4 +66,23 @@ figure img{
 .right{
   right: 0;
   height: 100%;
+}
+
+.projetil{
+  transition-timing-function: linear;
+}
+
+.group{
+  position: fixed;
+  display: block;
+}
+
+.sprite{
+  position: fixed;
+}
+
+.div_hitbox{
+  border: red 1px solid;
+  box-sizing: border-box;
+  position: absolute;
 }
