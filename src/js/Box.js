@@ -194,14 +194,14 @@ const Observer = new MutationObserver((mutations)=>{
 
   });
 });
-const RO = new ResizeObserver(entries => {
+/*const RO = new ResizeObserver(entries => {
   for (let entry of entries) {
     let box = entry.target.ptr;
     if(box && box.handleMove && box.resizeUpdate)
     entry.target.ptr.handleMove();
   }
 });
-
+*/
 const removePX = str=> Number(str.slice(0,-2));
 
 class DOM_Hitbox{
@@ -210,9 +210,9 @@ class DOM_Hitbox{
     this.el = el;
     this.el.ptr = this;
     this.canChangeFather = true;
-
+/*
     RO.observe(this.el);
-    this.resizeUpdate = true;
+    this.resizeUpdate = true;*/
     Observer.observe(this.el,{
       attributes: true,
       attributeFilter: ["style"]

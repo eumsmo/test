@@ -23,51 +23,6 @@ figure img{
   height: 100%;
 }
 
-#box{
-/*
-  width: 500px;
-  height: 250px;
-*/
-  width: 400px;
-  height: 400px;
-  position: relative;
-  box-sizing: border-box;
-  margin: 0 auto;
-}
-
-.lado{
-  position: absolute;
-  width: 10px;
-  height: 10px;
-  display: block;
-}
-
-#box .lado{
-  background-color: white;
-}
-
-.top{
-  top: 0; /*left: -50%;
-  transform: translateX(50%);*/
-  width: 100%;
-}
-
-.bottom{
-  bottom: 0;/*left: -50%;
-  transform: translateX(50%);*/
-  width: 100%;
-}
-
-.left{
-  left: 0;
-  height: 100%;
-}
-
-.right{
-  right: 0;
-  height: 100%;
-}
-
 .projetil{
   transition-timing-function: linear;
 }
@@ -81,8 +36,30 @@ figure img{
   position: fixed;
 }
 
-.div_hitbox{
-  border: red 1px solid;
+#game{
+  position: relative;
+  z-index: 0;
+  display: block;
+  width: 800px;
+  height: 500px;
   box-sizing: border-box;
-  position: absolute;
+
+  background-color: white;
+  border: 1px solid green;
+
+  /*transition: .5s ease;*/
 }
+
+html{height: 100%;}
+body{
+  margin: 0;
+  width: 100%;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: black;
+}
+
+.col{background-color: rgba(255, 17, 0, 0.14); position: fixed}
