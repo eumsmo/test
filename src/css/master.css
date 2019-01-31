@@ -28,13 +28,14 @@ figure img{
 }
 
 .group{
-  position: fixed;
   display: block;
 }
 
-.sprite{
-  position: fixed;
+.sprite,.col, .group{
+  position: absolute; /* If you change this, you should change "Box.js" too */
 }
+
+.col{background-color: rgba(255, 17, 0, 0.14);}
 
 #game{
   position: relative;
@@ -45,7 +46,6 @@ figure img{
   box-sizing: border-box;
 
   background-color: white;
-  border: 1px solid green;
 
   /*transition: .5s ease;*/
 }
@@ -61,5 +61,3 @@ body{
   justify-content: center;
   background-color: black;
 }
-
-.col{background-color: rgba(255, 17, 0, 0.14); position: fixed}

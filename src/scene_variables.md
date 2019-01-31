@@ -13,7 +13,7 @@ Scene variables foi uma forma eficaz de controlar eventos no mapa sem precisar d
 
 ### [something] = [other_thing]
  - Se [something] for uma chamada de função, [other_thing] será o ultimo argumento da função
- 
+
  - Se [something] for uma condição, [other_thing] será executada quando a condição for cumprida
 
-- Se [something] for uma variável, [other_thing] será
+- Se [something] for uma variável, [other_thing] será .. [WORK IN PROGRESS]

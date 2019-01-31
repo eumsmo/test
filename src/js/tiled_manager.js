@@ -18,7 +18,7 @@ function relatify(name){
     }
   }
 
-  main_folder = window.prompt(relatifySpeech(example));
+  main_folder = window.prompt(relatifySpeech(example),example);
 
   if(main_folder==null)return;
 
@@ -39,10 +39,13 @@ function download(name){
 }
 
 function test_scene(name){
-  let file = MANAGER.generateFile(name),scene = MANAGER.scenes[name];
+  let file = MANAGER.generateFile(name),scene = MANAGER.scenes[name],
+      w = scene.width, h = scene.height,
+      left = (screen.width/2)-(w/2),
+      top = (screen.height/2)-(h/2);
 
   localStorage.setItem("call_arg",file);
-  let w = window.open("index.html",'_blank',`location,width=${scene.width},height=${scene.height}`);
+  let newWindow = window.open("index.html",'_blank',`location,width=${w},height=${h},left=${left},top=${top}`);
 }
 
 function fileReady(name,evt){
@@ -147,12 +150,10 @@ class SceneManager {
   }
   _genLine(type,details){return `new ${type}(${JSON.stringify(details)});\n`}
   _objectOrganize(object,layer){
-    let c = game_block.getBoundingClientRect();
-    c = {x:0,y:0};
     let nextLine = "", details, type;
 
     details = {
-      x: object.x + c.x, y: object.y +c.y - object.height,
+      x: object.x , y: object.y - object.height,
       width: object.width, height: object.height
     };
 

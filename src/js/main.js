@@ -7,8 +7,16 @@ const run_scene = str => {
   eval(str);
 }
 
-window.scene = {}
-
+window.scene = {};
+Object.defineProperties(window.scene,{
+  width:{
+    set(val){return gameEl.style.width = val+'px'},
+    get(){return gameEl.style.width}
+  }, height:{
+    set(val){return gameEl.style.height = val+'px'},
+    get(){return gameEl.style.height}
+  }
+});
 
 // Get file by argument
 let file = localStorage.getItem("call_arg");
@@ -33,20 +41,3 @@ function getFileByInput(evt){
 
   reader.readAsText(file);
 }
-
-
-//Game temporary adjustment
-const toArray = thing => Array.prototype.slice.apply(thing);
-
-// NOT WORKING GRR
-/*
-function temp_adjust(){
-  let beAdjust = toArray(document.querySelectorAll("figure"));
-  let x = gameEl.offsetLeft, y = gameEl.offsetTop;
-  beAdjust.push(...toArray(document.querySelectorAll(".col")));
-
-  beAdjust.forEach(el=> el.style.transform = `translate(${x}px,${y}px)`);
-}
-
-window.addEventListener("resize",temp_adjust);
-*/

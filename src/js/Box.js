@@ -240,8 +240,8 @@ class DOM_Hitbox{
   get rect(){return this.el.getBoundingClientRect()}
   get width(){return this.rect.width}
   get height(){return this.rect.height}
-  get x(){return this.rect.x}
-  get y(){return this.rect.y}
+  get x(){return parseFloat(this.el.style.left)}
+  get y(){return parseFloat(this.el.style.top)}
 /*
   get x(){return this.el.offsetLeft}
   get y(){return this.el.offsetTop}

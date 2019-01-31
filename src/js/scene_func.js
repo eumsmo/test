@@ -8,68 +8,119 @@ let sv = {},
 
       sv_cond_callbacks[prop].forEach(option=>{
         let [caller,cond,to_fire] = option;
-        if(eval(cond))
-          sv_func.fire(caller,to_fire);
+        if(eval(cond)){
+          sv_func.$caller = caller;
+          to_fire.forEach(t=> sv_func.fire(eval(t)));
+          sv_func.$caller = null;
+        }
       });
 
       return obj[prop];
     }, get(t,n){return t[n]}
 });
 
+function delay(time){
+    return new Promise(resolve=>setTimeout(resolve,time));
+}
+
 let sv_func = {
-  set(caller,prop,val){scene_variables[prop] = val},
-  add(caller,prop,val){
+  $caller: null,
+  set(prop,val){scene_variables[prop] = val},
+  add(prop,val){
     if(scene_variables[prop]!=undefined) scene_variables[prop] +=val;
-    else this.set(caller,prop,val);
+    else this.set(prop,val);
   },
-  fire(caller,res_name){
-    if(res_name=="delete") caller.destroySelf();
+  fire(func){
+    func(this.$caller);
+  },
+  delete(caller = this.$caller){
+    if(caller) caller.destroySelf();
+  },
+  async end(){
+    if(window.opener){
+      let p = window.opener;
+      p.child = window;
+      await delay(100);
+      p.child.close();
+    }
   }
 };
 
 function eventElementInit(element,obj){
-  const breakIntoArgs = (obj,prop)=> {
-    let arr = prop.slice(1).split('_');
-    arr.push(obj[prop]);
-    return arr;
-  };
   let prop = obj,
       active_with = (prop.active_with)? [prop.active_with] : ["char"],
       events = [];
 
-  element.setGroup("main");
   element.type = "event";
+  const parseVariables = line => line.replace(/\${([^}]*)}/g,(a,prop)=>`scene_variables["${prop}"]`);
+  const getVariables = line =>{
+    let props = {}, arr =[];
+    line.replace(/\${([^}]*)}/g,(a,prop)=>props[prop] = true);
+    for(let p in props) arr.push(p);
+    return arr;
+  }
+
+  const functionExp = /\$[^\(]*(\([^\)]*\))/g;
+  function parseFunction(str){
+    let params = [];
+    str.replace(/\$[^\(]*(\([^\)]*\))/,(a,prop)=>{
+      params.push(...prop.slice(1,-1).split(','));
+    });
+    str = str.replace(/\([^\)]*\)/g,"");
+    str = `sv_func["${str.slice(1)}"](${params.join(',')})`;
+    return str;
+  }
+
+  const ncFunctionExp = /\$([^\,\=\)\s]*)/g;
+  const parseNCFunction = str => str.replace(ncFunctionExp,(a,prop)=>`sv_func["${prop}"]`);
 
   for (let p in prop){
-    if(p.startsWith("$")){
-      let args = breakIntoArgs(prop,p);
-      args = args.map(arg=> isNaN(arg)? arg: Number(arg));
-      events.push(args);
-    } else if(p.startsWith("#")){
-      let args = breakIntoArgs(prop,p), props = {};
-      args[0] = args[0].replace(/\${([^}]*)}/g,(a,prop)=>{
-        props[prop] = true;
-        return `scene_variables["${prop}"]`;
-      });
+    let op = p, arg = prop[p]+'', aux;
 
-      let params = [element,args[0],args[1]];
-      for(let pp in props) {
-        if(sv_cond_callbacks[pp])
-          sv_cond_callbacks[pp].push(params.slice());
+    if(p.startsWith("#")) aux = getVariables(p);
+
+    p = parseVariables(p);
+    arg = parseVariables(arg);
+    arg = parseNCFunction(arg);
+
+    while(functionExp.test(p)) p = p.replace(functionExp,parseFunction);
+    while(functionExp.test(arg)) arg = arg.replace(functionExp,parseFunction);
+
+    if(op.startsWith("${")){}
+    else if(op.startsWith("$")){ //Starts with function
+      p = p.endsWith(')')? p.slice(0,-1) : p+'(';
+      p += (p.endsWith('(')? '': ',') +arg+')';
+
+      while(functionExp.test(p)) p = p.replace(functionExp,parseFunction);
+      p= parseNCFunction(p);
+
+      events.push(p);
+    }
+    else if(op.startsWith("#")){ // Starts with a comparison
+      p= parseNCFunction(p).slice(1);
+
+      let params = [element,p,arg.split(',')];
+      for(let pp of aux) {
+        if(sv_cond_callbacks[pp]) sv_cond_callbacks[pp].push(params.slice());
         else sv_cond_callbacks[pp] = [params.slice()];
       }
-
-      console.log(args);
+      console.log(params);
     }
   }
 
-  function whenActive(el,events){
-    events.forEach(evt=> sv_func[evt[0]](el,...evt.slice(1)) );
-  }
-
-  active_with.forEach(type=>{
-    element.setCollisionEvent(type,()=>{
-      whenActive(element,events);
+  if(events.length!=0){
+    element.setGroup("main");
+    function whenActive(el,events){
+      console.log(events);
+      events.forEach(evt=> {
+        sv_func.$caller = el;
+        eval(evt);
+        sv_func.$caller = null;
+      });
+    }
+    console.log(events);
+    active_with.forEach(type=>{
+      element.setCollisionEvent(type,()=>whenActive(element,events));
     });
-  });
+  }
 }
