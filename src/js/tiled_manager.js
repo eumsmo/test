@@ -196,7 +196,7 @@ class SceneManager {
 
 
     let file = `// This file needs "scene_func.js" and "Box.js" to work!
-// Tiled file converted by "tiled_scene.html"
+// Tiled file converted by "compiler.html"
 // All made by "jv_eumsmo" (https://github.com/eumsmo)
 
 window.scene.width = ${scene.width};
