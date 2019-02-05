@@ -50,6 +50,16 @@ figure img{
   /*transition: .5s ease;*/
 }
 
+#existent_maps{
+  top: 5px;
+  left: 5px;
+}
+
+#existent_maps ul{
+  margin: 0;
+  padding: 0 1em;
+}
+
 html{height: 100%;}
 body{
   margin: 0;

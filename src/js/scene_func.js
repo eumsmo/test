@@ -9,9 +9,9 @@ let sv = {},
       sv_cond_callbacks[prop].forEach(option=>{
         let [caller,cond,to_fire] = option;
         if(eval(cond)){
-          sv_func.$caller = caller;
+          sv_func.$this = caller;
           to_fire.forEach(t=> sv_func.fire(eval(t)));
-          sv_func.$caller = null;
+          sv_func.$this = null;
         }
       });
 
@@ -24,16 +24,17 @@ function delay(time){
 }
 
 let sv_func = {
-  $caller: null,
+  $this: null, $other: null,
   set(prop,val){scene_variables[prop] = val},
   add(prop,val){
+    console.log(this.$other);
     if(scene_variables[prop]!=undefined) scene_variables[prop] +=val;
     else this.set(prop,val);
   },
   fire(func){
-    func(this.$caller);
+    func(this.$this);
   },
-  delete(caller = this.$caller){
+  delete(caller = this.$this){
     if(caller) caller.destroySelf();
   },
   async end(){
@@ -42,6 +43,9 @@ let sv_func = {
       p.child = window;
       await delay(100);
       p.child.close();
+    } else {
+      await delay(100);
+      window.alert("END!");
     }
   }
 };
@@ -110,17 +114,18 @@ function eventElementInit(element,obj){
 
   if(events.length!=0){
     element.setGroup("main");
-    function whenActive(el,events){
-      console.log(events);
+    function whenActive(details,el,events){
+      console.log(details,events);
       events.forEach(evt=> {
-        sv_func.$caller = el;
+        sv_func.$other = details.o;
+        sv_func.$this = el;
         eval(evt);
-        sv_func.$caller = null;
+        sv_func.$this = sv_func.$other = null;
       });
     }
     console.log(events);
     active_with.forEach(type=>{
-      element.setCollisionEvent(type,()=>whenActive(element,events));
+      element.setCollisionEvent(type,details=>whenActive(details,element,events));
     });
   }
 }

@@ -1,14 +1,15 @@
 const relatifySpeech = example => `Considerando que as imagens utilizadas pelo Tiled se encontram em um diretório filho do diretório mestre, podemos relativar o endereço das imagens!
 Exemplo de endereço: "${example}"
-Insira onde se encontra o diretório mestre:`;
+Insira onde se encontra o diretório mestre:
+(PS: O endereço ficará salvo como padrão até que você edite novamente)`;
 
 let file_modal = document.querySelector("#settings"),
     file_input = document.querySelector("#file_receiver"),
     file_list = document.querySelector("#settings ul"),
-    map_obj = {};
+    map_obj = {}, was_relatified = false;
 
 
-function relatify(name){
+function relatify(name, byPrompt){
   let scene = MANAGER.scenes[name], example ,main_folder;
 
   for(let image of scene.images){
@@ -18,7 +19,8 @@ function relatify(name){
     }
   }
 
-  main_folder = window.prompt(relatifySpeech(example),example);
+  main_folder =  byPrompt? window.prompt(relatifySpeech(example),example) : localStorage.getItem("main_folder");
+  localStorage.setItem("main_folder",main_folder);
 
   if(main_folder==null)return;
 
@@ -27,9 +29,13 @@ function relatify(name){
       scene.images[i] = scene.images[i].replace(main_folder,"");
     console.log(scene.images[i]);
   }
+
+  was_relatified = true;
 }
 
 function download(name){
+  if(!was_relatified) relatify(name);
+
   let file = MANAGER.generateFile(name),
       a = document.createElement('a');
 
@@ -39,6 +45,8 @@ function download(name){
 }
 
 function test_scene(name){
+  if(!was_relatified) relatify(name);
+
   let file = MANAGER.generateFile(name),scene = MANAGER.scenes[name],
       w = scene.width, h = scene.height,
       left = (screen.width/2)-(w/2),
@@ -67,7 +75,7 @@ function fileReady(name,evt){
 
     convert.href = make_relative.href = test.href = "#";
 
-    make_relative.addEventListener("click",()=>relatify(name));
+    make_relative.addEventListener("click",()=>relatify(name,true));
     convert.addEventListener("click",()=>download(name));
     test.addEventListener("click",()=>test_scene(name));
 
