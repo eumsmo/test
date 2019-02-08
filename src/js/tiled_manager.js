@@ -12,9 +12,9 @@ let file_modal = document.querySelector("#settings"),
 function relatify(name, byPrompt){
   let scene = MANAGER.scenes[name], example ,main_folder;
 
-  for(let image of scene.images){
-    if(image!=null){
-      example=image;
+  for(let image in scene.images){
+    if(scene.images[image]!=null){
+      example=scene.images[image];
       break;
     }
   }
@@ -24,10 +24,10 @@ function relatify(name, byPrompt){
 
   if(main_folder==null)return;
 
-  for(let i=0; i< scene.images.length;i++){
-    if(scene.images[i]!=null)
-      scene.images[i] = scene.images[i].replace(main_folder,"");
-    console.log(scene.images[i]);
+  for(let id in scene.images) {
+    if(scene.images[id]!=null)
+      scene.images[id] = scene.images[id].replace(main_folder,"");
+    console.log(scene.images[id]);
   }
 
   was_relatified = true;
@@ -111,7 +111,7 @@ class SceneManager {
   addScene(name,obj){
     let scene = this.scenes[name] = {};
     scene.info = obj;
-    scene.images = [];
+    scene.images = {};
     scene.tiles_size = {
       width: obj.tilewidth,
       height: obj.tileheight
@@ -119,8 +119,7 @@ class SceneManager {
     scene.width = scene.info.width * scene.tiles_size.width;
     scene.height = scene.info.height * scene.tiles_size.height;
 
-
-    // Preload Images
+    // Load images
     obj.tilesets.forEach(tset=>{
       let i = tset.firstgid;
 
@@ -128,7 +127,7 @@ class SceneManager {
         scene.images[i] = tset.image;
       else
         for(let gid in tset.tiles)
-          scene.images[Number(gid)+i] = tset.tiles[gid].image;
+          scene.images[(Number(gid)+i)+""] = tset.tiles[gid].image;
     });
 
   }
@@ -156,7 +155,16 @@ class SceneManager {
     }
     return lines;
   }
-  _genLine(type,details){return `new ${type}(${JSON.stringify(details)});\n`}
+  _genLine(type,details){
+    let line = `new ${type}({`;
+    for(let d in details){
+      line+=d+':';
+      if(d=='src') line += 'IMAGES["'+details[d]+'"]';
+      else line+=details[d];
+      line+=',';
+    }
+    return line.slice(0,-1) + "});\n";
+  }
   _objectOrganize(object,layer){
     let nextLine = "", details, type;
 
@@ -165,7 +173,7 @@ class SceneManager {
       width: object.width, height: object.height
     };
 
-    if(object.gid) details.src = this.actualScene.images[object.gid];
+    if(object.gid) details.src = object.gid;
 
     if(!object.type){
       if(object.gid)type = "Decoration";
@@ -201,18 +209,19 @@ class SceneManager {
     layers = scene.info.layers;
     this.actualScene = scene;
 
+    let file = "";
 
-
-    let file = `// This file needs "scene_func.js" and "Box.js" to work!
+    const header = `// This file needs "scene_func.js" and "Box.js" to work!
 // Tiled file converted by "compiler.html"
 // All made by "jv_eumsmo" (https://github.com/eumsmo)
 
 window.scene.width = ${scene.width};
 window.scene.height = ${scene.height};
-
-let aux;
+`;
+    const important = `let aux;
 let game_block = document.querySelector("#game");
 const Keyboard = new Teclado();
+window.Keyboard = Keyboard;
 
 new Group("decoration",{father: game_block});
 new Group("main",{father: game_block});
@@ -220,7 +229,14 @@ new Group("char",{father: game_block});
 
 `;
 
+    file = important;
     layers.forEach(layer=> file += this._layerOrganize(layer));
+
+    file = `const IMAGES = ${JSON.stringify(this.actualScene.images,null,'\t')};
+window.IMAGES = IMAGES;
+` + file;
+
+    file = header + file;
 
     console.log(file);
     return file;

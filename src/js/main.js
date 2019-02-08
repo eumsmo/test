@@ -20,6 +20,10 @@ Object.defineProperties(window.scene,{
   }
 });
 
+
+
+/* --- GET FILE SECTION --- */
+
 // Get file by input
 function getFileByInput(evt){
   let el = evt.currentTarget, file = el.files[0];
@@ -40,7 +44,6 @@ const github_repo_name = "test";
 const github_path = "src/js_maps";
 const github_api = `https://api.github.com/repos/${github_owner}/${github_repo_name}/contents/${github_path}`;
 let githubMaps = {};
-
 async function get_maps_github(){
   let obj = await fetch(github_api).then(res=>res.json());
   for(let i=0;i<obj.length;i++){
@@ -68,7 +71,7 @@ function generate_github_maps_el(){
   }
 }
 
-
+// Get file by everything
 function getFile(){
 
   // Get file by argument
@@ -86,3 +89,35 @@ function getFile(){
 }
 
 getFile();
+
+
+
+/* --- HELLO WORLD --- */
+
+function resize_scene(){
+  let dw = window.screen.width, dh = window.screen.height,
+      ww = window.innerWidth, wh = window.innerHeight,
+      w,h, pw, ph, perc;
+
+  w = (dw>ww)? ww : dw;
+  h = (dh>wh)? wh : dh;
+
+  pw = 100*w/parseFloat(window.scene.width);
+  ph = 100*h/parseFloat(window.scene.height);
+
+  console.log(pw,ph);
+
+  perc = pw<ph? pw : ph;
+  perc = perc>100? 100: perc;
+
+
+  ALL_HITBOXES.forEach(e=>{
+    e.width = e.width/100*perc;
+    e.height = e.height/100*perc;
+	  e.x = e.x/100*perc;
+	  e.y = e.y/100*perc;
+  });
+
+  gameEl.style.height = parseFloat(gameEl.style.height)/100 * perc + 'px';
+  gameEl.style.width = parseFloat(gameEl.style.width)/100 * perc + 'px';
+}

@@ -194,15 +194,16 @@ const Observer = new MutationObserver((mutations)=>{
 
   });
 });
-/*const RO = new ResizeObserver(entries => {
+const RO = new ResizeObserver(entries => {
   for (let entry of entries) {
     let box = entry.target.ptr;
     if(box && box.handleMove && box.resizeUpdate)
     entry.target.ptr.handleMove();
   }
 });
-*/
+
 const removePX = str=> Number(str.slice(0,-2));
+let ALL_HITBOXES = [];
 
 class DOM_Hitbox{
   constructor(el){
@@ -210,9 +211,9 @@ class DOM_Hitbox{
     this.el = el;
     this.el.ptr = this;
     this.canChangeFather = true;
-/*
+
     RO.observe(this.el);
-    this.resizeUpdate = true;*/
+    this.resizeUpdate = true;
     Observer.observe(this.el,{
       attributes: true,
       attributeFilter: ["style"]
@@ -223,6 +224,11 @@ class DOM_Hitbox{
     this.lx = this.x;
     this.ly = this.y;
     this.type = "none";
+
+    this._x = 0;
+    this._y = 0;
+
+    ALL_HITBOXES.push(this);
   }
 
   _willChange(...args){
@@ -240,24 +246,22 @@ class DOM_Hitbox{
   get rect(){return this.el.getBoundingClientRect()}
   get width(){return this.rect.width}
   get height(){return this.rect.height}
-  get x(){return parseFloat(this.el.style.left)}
-  get y(){return parseFloat(this.el.style.top)}
-/*
   get x(){return this.el.offsetLeft}
   get y(){return this.el.offsetTop}
-*/
-  set width(val){
-    return this.el.style.width = val+'px'
-  }
-  set height(val){
-    return this.el.style.height = val+'px'
-  }
+  /*
+  get x(){return parseFloat(this.el.style.left)}
+  get y(){return parseFloat(this.el.style.top)}
+  */
+
+
+  set width(val){ return this.el.style.width = val+'px'}
+  set height(val){ return this.el.style.height = val+'px'}
   set x(val){
     return this.el.style.left = val+'px'
   }
   set y(val){
     return this.el.style.top = val+'px'
-  }
+}
 
   setGroup(name){
     if(this.group) Groups[this.group].remove(this.index);
@@ -310,7 +314,7 @@ class DOM_Hitbox{
       this._handleMove('h',this.x-this.lx);
       this.lx = this.x;
     }
-    if(this.ly!=this.y){
+    else if(this.ly!=this.y){
       this._handleMove('v',this.y-this.ly);
       this.ly = this.y;
     }
@@ -327,6 +331,7 @@ class DOM_Hitbox{
     return arr;
   }
 }
+
 class TransHitbox extends DOM_Hitbox{
   constructor(el){
     super(el);
@@ -382,6 +387,7 @@ class Sprite extends DOM_Hitbox{
     if(details.y!=undefined) this.y = details.y;
 
     this.type = "sprite";
+
   }
 
   collision_with_sprite(details){
@@ -443,13 +449,14 @@ class Char extends Sprite{
   }
 
   collision_with_sprite({t,o,d,c}){
+    console.log(t,o,d,c);
     if(d=="v"){
-      if(c<0)t.y = o.y+o.height+1;
-      else if(c>0)t.y = o.y-t.height-1;
+      if(c<0)t.y = o.y+o.height;
+      else if(c>0)t.y = o.y-t.height;
     }
     if(d=="h"){
-      if(c<0)t.x = o.x+o.width+1;
-      else if(c>0)t.x = o.x-t.width-1;
+      if(c<0)t.x = o.x+o.width;
+      else if(c>0)t.x = o.x-t.width;
     }
   }
 
