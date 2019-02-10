@@ -1,0 +1,16 @@
+{
+  "short_name": "GameEngine",
+  "name": "eumsmo's game engine tests",
+  "icons": [
+    {
+      "src": "src/img/sprite_2.png",
+      "type": "image/png",
+      "sizes": "32x32"
+    }
+  ],
+  "start_url": "index.html",
+  "background_color": "#000",
+  "theme_color": "#000",
+  "display": "standalone",
+  "orientation": "landscape"
+}

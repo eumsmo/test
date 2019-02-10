@@ -3,10 +3,13 @@ const fileInput = document.querySelector("#file_receiver");
 const gameEl = document.querySelector("#game");
 const mapsEl = document.querySelector("#existent_maps");
 
+let game_running = false;
 const run_scene = str => {
   getFileEl.remove();
   mapsEl.remove();
   eval(str);
+  resize_scene();
+  game_running = true;
 }
 
 window.scene = {};
@@ -95,6 +98,7 @@ getFile();
 /* --- HELLO WORLD --- */
 
 function resize_scene(){
+
   let dw = window.screen.width, dh = window.screen.height,
       ww = window.innerWidth, wh = window.innerHeight,
       w,h, pw, ph, perc;
@@ -102,22 +106,45 @@ function resize_scene(){
   w = (dw>ww)? ww : dw;
   h = (dh>wh)? wh : dh;
 
-  pw = 100*w/parseFloat(window.scene.width);
-  ph = 100*h/parseFloat(window.scene.height);
+  pw = w/parseFloat(window.scene.width);
+  ph = h/parseFloat(window.scene.height);
 
   console.log(pw,ph);
 
   perc = pw<ph? pw : ph;
-  perc = perc>100? 100: perc;
+  perc = perc>1? 1: perc;
+  console.log("scale("+perc+")");
+  gameEl.style.transform = "scale("+perc+")";
 
+  let rect = gameEl.getBoundingClientRect();
 
-  ALL_HITBOXES.forEach(e=>{
-    e.width = e.width/100*perc;
-    e.height = e.height/100*perc;
-	  e.x = e.x/100*perc;
-	  e.y = e.y/100*perc;
-  });
-
-  gameEl.style.height = parseFloat(gameEl.style.height)/100 * perc + 'px';
-  gameEl.style.width = parseFloat(gameEl.style.width)/100 * perc + 'px';
+  if(perc!=1){
+    if(perc==ph) gameEl.style.top = -rect.top+'px';
+    else gameEl.style.left = -rect.left+'px';
+  }
 }
+
+/* Mobile Movement *//*
+const mod = num=>num>=0?num:-num;
+let sx,sy, dir=[];
+document.addEventListener("touchstart",e=>{
+  let t = e.touches[0];
+  sx = t.pageX;
+  sy = t.pageY;
+  console.log(sx,sy);
+
+
+})
+document.addEventListener("touchmove",e=>{
+  let t = e.touches[0];
+  let x = t.pageX, y = t.pageY;
+
+  if(mod(x-sx)>50) dir[0] = x-sx>0? 1:-1;
+  else dir[0] = 0;
+  if(mod(y-sy)>50) dir[1] = y-sy>0? 1:-1;
+  else dir[1] = 0;
+
+  if(game_running) char.setDir(...dir);
+  console.log(dir);
+});
+*/

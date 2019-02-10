@@ -1,3 +1,6 @@
+/* THIS CODE ISN'T UP TO DATE AND WILL BE REMOVED SOON */
+/* LOOK UP TO "Hitbox.js" FOR THE UPDATED FILE! */
+
 class Teclado {
   constructor(){
     this.pressedKeys = {

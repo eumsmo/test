@@ -72,12 +72,14 @@ class GroupsManager{
   }
 }
 const GROUPS = new GroupsManager();
+GROUPS.create("decoration");
 GROUPS.create("main");
-
+GROUPS.create("char");
 
 
 
 let HITBOXES_last_id = 0;
+const ALL_HITBOXES = {};
 class Hitbox{
   constructor(o){
     this.x = o.x || 0;
@@ -92,6 +94,7 @@ class Hitbox{
     this.type = "none";
     this.el;
     this.$hitbox_id = HITBOXES_last_id;
+    ALL_HITBOXES[this.$hitbox_id] = this;
     HITBOXES_last_id++;
   }
 
@@ -128,9 +131,7 @@ class Hitbox{
   }// is overlapping horizontaly
 
   isOverlapingOther(other,vorh){
-    //console.log(this.isOverV(other),this.isOverH(other),other.$hitbox_id);
-    /*return !(this.x+this.width < other.x || this.x > other.x+other.width ||
-          this.y + this.height < other.y || this.y > other.y + other.height);*/
+
     return vorh=='h'? this.isOverH(other) : this.isOverV(other);
   }
   isItself(other){
@@ -138,24 +139,16 @@ class Hitbox{
   }
   isOverlapingGroup(groupName,vorh,callback){
     let groupItens = GROUPS.get(groupName);
-    for(let el of groupItens){
+    for(let el of groupItens)
       if(el && !this.isItself(el) && this.isOverlapingOther(el,vorh))
         callback(el);
-    }
-
-    return false;
   }
   isOverlaping(vorh,callback){
-    for(let group of this.watchedContexts){
+    for(let group of this.watchedContexts)
       this.isOverlapingGroup(group,vorh,callback);
-    }
-  }
-  _confirmOverlap(o,vorh){
-    return vorh=='h'? this.isOverH(o) : this.isOverV(o);
   }
   _handleMove(vorh,coef){
     this.isOverlaping(vorh,o =>{
-      if(!this._confirmOverlap(o,vorh))return; //didnt overlap
       if(this["collision_with_"+o.type])
         this["collision_with_"+o.type]({o: o, d: vorh, t: this, c: coef});
       if(o["collision_with_"+this.type])
@@ -179,16 +172,18 @@ class Hitbox{
 
   // Group Stuff
   setGroup(name){
-    if(this.group) this["unsubscribe_"+this.group]();
+    if(this.group) this["unsubscribe_group_"+this.group]();
     GROUPS.add(name,this);
   }
   destroySelf(){
     for(let prop in this)
       if(prop.startsWith("unsubscribe_")) this[prop]();
+    delete ALL_HITBOXES[this.$hitbox_id];
     this.el.remove();
   }
 }
 
+const game_block = document.querySelector("#game");
 class Sprite extends Hitbox{
   constructor(o){
     super(o); // x, y, width, height
@@ -196,18 +191,18 @@ class Sprite extends Hitbox{
     img.src = o.src;
     img.classList.add("sprite");
     this.setDisplay(img);
-    document.querySelector("#game").appendChild(img);
+    game_block.appendChild(img);
 
     this.type = "sprite";
   }
 }
 class Char extends Sprite{
-  constructor(){
-    super({width:32,height:32,src:"src/img/coracaum.png"});
+  constructor(o){
+    super(o);
 
     this.dx = 0;
     this.dy = 0;
-    this.speed = 1;
+    this.speed = 1.5;
     this.watchedContexts = ["main"];
     this.type = "char";
 
@@ -262,10 +257,29 @@ class Char extends Sprite{
       else if(c>0)t.x = o.x-t.width;
     }
   }
+
+  collision_with_block(details){return this.collision_with_sprite(details)}
+
 }
 
-let s = new Sprite({x:50,y:50,height:50,width:50,src: 'src/img/dirt.png'});
-s.setGroup("main");
-s = new Sprite({x:100,y:50,height:50,width:50,src: 'src/img/dirt.png'});
-s.setGroup("main");
-let c = new Char();
+// Tiled_Manager Classes
+class InvisibleWall extends Hitbox{
+  constructor(details){
+    super(details);
+    let div = document.createElement('div');
+    this.setDisplay(div);
+
+    this.type = "block";
+    this.setGroup("main");
+    this.watchedContexts = ['char'];
+    div.classList.add("col");
+    game_block.appendChild(div);
+  }
+}
+class Decoration extends Sprite{
+  constructor(details){
+    super(details);
+    this.setGroup('decoration');
+    this.watchedContexts = [];
+  }
+}

@@ -166,7 +166,7 @@ class SceneManager {
     return line.slice(0,-1) + "});\n";
   }
   _objectOrganize(object,layer){
-    let nextLine = "", details, type;
+    let nextLine = "", beforeLine="", details, type;
 
     details = {
       x: object.x , y: object.y - object.height,
@@ -184,12 +184,12 @@ class SceneManager {
 
     } else if(object.type){
       type = object.type;
-      if(type == "Char") nextLine = "Keyboard.chars.push(aux);\n";
+      if(type == "Char") beforeLine = "window.char = ";
     }
 
     if(object.properties) nextLine+='eventElementInit(aux,'+JSON.stringify(object.properties)+');\n';
 
-    return (nextLine!="")? "aux=" + this._genLine(type,details) + nextLine : this._genLine(type,details);
+    return beforeLine+ ((nextLine!="")? "aux=" + this._genLine(type,details) + nextLine : this._genLine(type,details));
   }
   _layerOrganize(layer){
     let lines = "";
@@ -211,7 +211,7 @@ class SceneManager {
 
     let file = "";
 
-    const header = `// This file needs "scene_func.js" and "Box.js" to work!
+    const header = `// This file needs "scene_func.js" and "Hitbox.js" to work!
 // Tiled file converted by "compiler.html"
 // All made by "jv_eumsmo" (https://github.com/eumsmo)
 
@@ -219,14 +219,6 @@ window.scene.width = ${scene.width};
 window.scene.height = ${scene.height};
 `;
     const important = `let aux;
-let game_block = document.querySelector("#game");
-const Keyboard = new Teclado();
-window.Keyboard = Keyboard;
-
-new Group("decoration",{father: game_block});
-new Group("main",{father: game_block});
-new Group("char",{father: game_block});
-
 `;
 
     file = important;
