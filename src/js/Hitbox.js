@@ -1,0 +1,271 @@
+class Subscribe{
+  constructor(name){
+    this.in = [];
+    this.name = name;
+  }
+
+  _insert(el,index){
+    this.in[index] = el;
+    el["subscribed_"+this.name+"_id"] = index;
+    el["unsubscribe_"+this.name] = ()=> this.remove(index);
+    return index;
+  }
+
+  insert(el){
+    let i;
+    for(i=0;i<this.in.length;i++)
+      if(this.in[i]==null) return this._insert(el,i);
+    return this._insert(el,i);
+  }
+
+  remove(i){return (this.in[i] = null)}
+
+  each(callback){
+    for(let el of this.in)
+      if(el!=null) callback(el);
+  }
+}
+class Teclado extends Subscribe{
+  constructor(){
+    super("keyboard");
+    this.pressedKeys = {};
+    document.addEventListener("keydown",evt=>this._pressed(evt.key));
+    document.addEventListener("keyup",evt=>this._unpressed(evt.key));
+    document.addEventListener("onfocusout",evt=>this._unpressed());
+
+    this.ce = 10; // calls every
+    this._updateSubs();
+  }
+  _pressed(key){
+    this.pressedKeys[key] = true;
+  }
+  _unpressed(key){
+    if(key!=undefined) delete this.pressedKeys[key];
+    else for(let key in this.pressedKeys) delete this.pressedKeys[key];
+  }
+
+  _updateSubs(){
+    let keys = Object.keys(this.pressedKeys);
+    this.each(sub=>sub.keyPressed(keys));
+
+    setTimeout(()=> this._updateSubs(),this.ce);
+  }
+
+}
+const Keyboard = new Teclado();
+
+class GroupsManager{
+  constructor(){
+    this.groups = {};
+  }
+
+  create(name){
+    this.groups[name] = new Subscribe("group_"+name);
+    return this.groups[name];
+  }
+  get(name){return this.groups[name].in}
+  add(name,el){
+    if(this.groups[name]){
+      el.group = name;
+      return this.groups[name].insert(el);
+    }
+  }
+}
+const GROUPS = new GroupsManager();
+GROUPS.create("main");
+
+
+
+
+let HITBOXES_last_id = 0;
+class Hitbox{
+  constructor(o){
+    this.x = o.x || 0;
+    this.y = o.y || 0;
+    this.width = o.width || 0;
+    this.height = o.height || 0;
+
+    this.lx = 0;
+    this.ly = 0;
+    this.watchedContexts = [];
+
+    this.type = "none";
+    this.el;
+    this.$hitbox_id = HITBOXES_last_id;
+    HITBOXES_last_id++;
+  }
+
+  display(){
+    this.el.style.left = this.x+'px';
+    this.el.style.top = this.y+'px';
+    this.el.style.height = this.height+'px';
+    this.el.style.width = this.width+'px';
+  }
+  setDisplay(el){
+    this.el = el;
+    this.display();
+  }
+
+  update(){
+    this.handleMove();
+    this.display();
+  }
+
+  // Collsion Stuff
+  isOverH(o){
+    let reg = this.y+this.height>o.y && this.y<o.y+o.height,
+        a = this.x<o.x&&this.x+this.width>o.x,
+        b = this.x<o.x+o.width&&this.x+this.width>o.x+o.width;
+
+    return reg&&a || reg&&b;
+  } //is overlapping verticaly
+  isOverV(o){
+    let reg = this.x+this.width>o.x && this.x<o.x+o.width,
+        a = this.y<o.y&&this.y+this.height>o.y,
+        b = this.y<o.y+o.height&&this.y+this.height>o.y+o.height;
+
+    return reg&&a || reg&&b;
+  }// is overlapping horizontaly
+
+  isOverlapingOther(other,vorh){
+    //console.log(this.isOverV(other),this.isOverH(other),other.$hitbox_id);
+    /*return !(this.x+this.width < other.x || this.x > other.x+other.width ||
+          this.y + this.height < other.y || this.y > other.y + other.height);*/
+    return vorh=='h'? this.isOverH(other) : this.isOverV(other);
+  }
+  isItself(other){
+    return this.$hitbox_id == other.$hitbox_id;
+  }
+  isOverlapingGroup(groupName,vorh,callback){
+    let groupItens = GROUPS.get(groupName);
+    for(let el of groupItens){
+      if(el && !this.isItself(el) && this.isOverlapingOther(el,vorh))
+        callback(el);
+    }
+
+    return false;
+  }
+  isOverlaping(vorh,callback){
+    for(let group of this.watchedContexts){
+      this.isOverlapingGroup(group,vorh,callback);
+    }
+  }
+  _confirmOverlap(o,vorh){
+    return vorh=='h'? this.isOverH(o) : this.isOverV(o);
+  }
+  _handleMove(vorh,coef){
+    this.isOverlaping(vorh,o =>{
+      if(!this._confirmOverlap(o,vorh))return; //didnt overlap
+      if(this["collision_with_"+o.type])
+        this["collision_with_"+o.type]({o: o, d: vorh, t: this, c: coef});
+      if(o["collision_with_"+this.type])
+        o["collision_with_"+this.type]({o: this, d: vorh, t: o, c: -coef});
+    });
+  }
+  setCollisionEvent(collisionWith,call){
+    return this["collision_with_"+collisionWith] = call;
+  }
+  handleMove(dir){
+
+    if(this.x!=this.lx){
+      this._handleMove('h',this.x-this.lx);
+      this.lx = this.x;
+    }
+    else if(this.y!=this.ly){
+      this._handleMove('v',this.y-this.ly);
+      this.ly = this.y;
+    }
+  }
+
+  // Group Stuff
+  setGroup(name){
+    if(this.group) this["unsubscribe_"+this.group]();
+    GROUPS.add(name,this);
+  }
+  destroySelf(){
+    for(let prop in this)
+      if(prop.startsWith("unsubscribe_")) this[prop]();
+    this.el.remove();
+  }
+}
+
+class Sprite extends Hitbox{
+  constructor(o){
+    super(o); // x, y, width, height
+    let img = new Image(o.width,o.height);
+    img.src = o.src;
+    img.classList.add("sprite");
+    this.setDisplay(img);
+    document.querySelector("#game").appendChild(img);
+
+    this.type = "sprite";
+  }
+}
+class Char extends Sprite{
+  constructor(){
+    super({width:32,height:32,src:"src/img/coracaum.png"});
+
+    this.dx = 0;
+    this.dy = 0;
+    this.speed = 1;
+    this.watchedContexts = ["main"];
+    this.type = "char";
+
+    Keyboard.insert(this);
+  }
+
+  _keyTranslate(key){
+    let controls = {
+      up: ["w","W","ArrowUp"],
+      left: ["a","A","ArrowLeft"],
+      down: ["s","S","ArrowDown"],
+      right: ["d","D","ArrowRight"]
+    };
+
+    for(let d in controls)
+      for(let k of controls[d])
+        if(k==key) return d;
+    return null;
+  }
+  keyPressed(keys){
+    let directions = keys.map(k=>this._keyTranslate(k));
+    let dx=0, dy=0;
+    directions.forEach(d=>{
+      if(d=='left') dx--;
+      else if(d=='right') dx++;
+      else if(d=='up') dy--;
+      else if(d=='down') dy++;
+    });
+
+    this.setDir(dx,dy);
+  }
+  setDir(x,y){
+    this.dx = x;
+    this.dy = y;
+    this.move();
+  }
+  move(){
+    this.x += this.speed*this.dx;
+    this.update();
+    this.y += this.speed*this.dy;
+    this.update();
+  }
+
+  collision_with_sprite({t,o,d,c}){
+    //console.log(t,o,d,c);
+    if(d=="v"){
+      if(c<0)t.y = o.y+o.height;
+      else if(c>0)t.y = o.y-t.height;
+    }
+    else if(d=="h"){
+      if(c<0)t.x = o.x+o.width;
+      else if(c>0)t.x = o.x-t.width;
+    }
+  }
+}
+
+let s = new Sprite({x:50,y:50,height:50,width:50,src: 'src/img/dirt.png'});
+s.setGroup("main");
+s = new Sprite({x:100,y:50,height:50,width:50,src: 'src/img/dirt.png'});
+s.setGroup("main");
+let c = new Char();
