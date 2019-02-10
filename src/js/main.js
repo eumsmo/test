@@ -8,17 +8,24 @@ const run_scene = str => {
   getFileEl.remove();
   mapsEl.remove();
   eval(str);
-  resize_scene();
   game_running = true;
+  resize_scene();
 }
 
+let game_size = {};
 window.scene = {};
 Object.defineProperties(window.scene,{
   width:{
-    set(val){return gameEl.style.width = val+'px'},
+    set(val){
+      game_size.width = val;
+      return gameEl.style.width = val+'px';
+    },
     get(){return gameEl.style.width}
   }, height:{
-    set(val){return gameEl.style.height = val+'px'},
+    set(val){
+      game_size.height = val;
+      return gameEl.style.height = val+'px';
+    },
     get(){return gameEl.style.height}
   }
 });
@@ -98,7 +105,7 @@ getFile();
 /* --- HELLO WORLD --- */
 
 function resize_scene(){
-
+  if(!game_running)return;
   let dw = window.screen.width, dh = window.screen.height,
       ww = window.innerWidth, wh = window.innerHeight,
       w,h, pw, ph, perc;
@@ -114,15 +121,13 @@ function resize_scene(){
   perc = pw<ph? pw : ph;
   perc = perc>1? 1: perc;
   console.log("scale("+perc+")");
-  gameEl.style.transform = "scale("+perc+")";
+  change_scale(perc);
 
-  let rect = gameEl.getBoundingClientRect();
+  gameEl.style.width = game_size.width*perc+'px';
+  gameEl.style.height = game_size.height*perc+'px';
 
-  if(perc!=1){
-    if(perc==ph) gameEl.style.top = -rect.top+'px';
-    else gameEl.style.left = -rect.left+'px';
-  }
 }
+//window.addEventListener("resize",resize_scene);
 
 /* Mobile Movement *//*
 const mod = num=>num>=0?num:-num;

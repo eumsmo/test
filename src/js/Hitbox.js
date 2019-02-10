@@ -77,7 +77,7 @@ GROUPS.create("main");
 GROUPS.create("char");
 
 
-
+let DISPLAY_SCALE = 1;
 let HITBOXES_last_id = 0;
 const ALL_HITBOXES = {};
 class Hitbox{
@@ -99,10 +99,10 @@ class Hitbox{
   }
 
   display(){
-    this.el.style.left = this.x+'px';
-    this.el.style.top = this.y+'px';
-    this.el.style.height = this.height+'px';
-    this.el.style.width = this.width+'px';
+    this.el.style.left = DISPLAY_SCALE*this.x+'px';
+    this.el.style.top = DISPLAY_SCALE*this.y+'px';
+    this.el.style.height = DISPLAY_SCALE*this.height+'px';
+    this.el.style.width = DISPLAY_SCALE*this.width+'px';
   }
   setDisplay(el){
     this.el = el;
@@ -182,6 +182,10 @@ class Hitbox{
     this.el.remove();
   }
 }
+const change_scale = scale=> {
+  DISPLAY_SCALE = scale;
+  for(let h in ALL_HITBOXES) ALL_HITBOXES[h].display();
+};
 
 const game_block = document.querySelector("#game");
 class Sprite extends Hitbox{
