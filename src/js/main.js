@@ -1,3 +1,4 @@
+// File needs Hitbox.js
 const getFileEl = document.querySelector("#settings");
 const fileInput = document.querySelector("#file_receiver");
 const gameEl = document.querySelector("#game");
@@ -129,27 +130,50 @@ function resize_scene(){
 }
 //window.addEventListener("resize",resize_scene);
 
-/* Mobile Movement *//*
+/* Mobile Movement */
 const mod = num=>num>=0?num:-num;
-let sx,sy, dir=[];
+let sx,sy, dir=[], touchRunning = false,
+    touchEl = document.querySelector("#touch_visual"), touchSize = 35,
+    mTouchEl = document.querySelector("#moving_touch"), mTouchSize = 25;
 document.addEventListener("touchstart",e=>{
-  let t = e.touches[0];
+  let t = e.touches[0], offset = touchSize/2;
   sx = t.pageX;
   sy = t.pageY;
   console.log(sx,sy);
 
+  touchEl.style.left = mTouchEl.style.left = sx-offset+'px';
+  touchEl.style.top = mTouchEl.style.top = sy-offset+'px';
+  touchEl.classList.remove("dnone");
+  mTouchEl.classList.remove("dnone");
 
+  touchRunning = true;
+  if(game_running)
+  touchMove();
 })
 document.addEventListener("touchmove",e=>{
-  let t = e.touches[0];
+  let t = e.touches[0], offset = mTouchSize/2;
   let x = t.pageX, y = t.pageY;
 
-  if(mod(x-sx)>50) dir[0] = x-sx>0? 1:-1;
+  if(mod(x-sx)>offset) dir[0] = x-sx>0? 1:-1;
   else dir[0] = 0;
-  if(mod(y-sy)>50) dir[1] = y-sy>0? 1:-1;
+  if(mod(y-sy)>offset) dir[1] = y-sy>0? 1:-1;
   else dir[1] = 0;
 
   if(game_running) char.setDir(...dir);
-  console.log(dir);
+
+  mTouchEl.style.left = x-offset+'px';
+  mTouchEl.style.top = y-offset+'px';
 });
-*/
+document.addEventListener("touchend",()=>{
+
+  touchEl.classList.add("dnone");
+  mTouchEl.classList.add("dnone");
+  touchRunning = false;
+});
+function touchMove(){
+  if(dir.length>0)
+  char.setDir(...dir);
+
+  if(touchRunning)
+  setTimeout(()=> touchMove(),CE);
+}

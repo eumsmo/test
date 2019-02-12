@@ -62,3 +62,26 @@ figure img{
   margin: 0;
   padding: 0 1em;
 }
+
+#touch_visual, #moving_touch{
+  position: fixed;
+  display: block;
+  z-index: 9999;
+
+  box-sizing: border-box;
+  background-color: #58585826;
+  border: 5px solid #c7c7c724;
+  border-radius: 50%;
+}
+
+#touch_visual{
+  width: 35px;
+  height: 35px;
+}
+
+#moving_touch{
+  width: 25px;
+  height: 25px;
+}
+
+.dnone{display:none !important}

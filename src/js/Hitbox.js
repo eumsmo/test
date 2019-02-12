@@ -1,3 +1,4 @@
+const CE = 10;
 class Subscribe{
   constructor(name){
     this.in = [];
@@ -33,7 +34,7 @@ class Teclado extends Subscribe{
     document.addEventListener("keyup",evt=>this._unpressed(evt.key));
     document.addEventListener("onfocusout",evt=>this._unpressed());
 
-    this.ce = 10; // calls every
+    this.ce = CE; // calls every
     this._updateSubs();
   }
   _pressed(key){
