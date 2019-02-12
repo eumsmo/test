@@ -84,4 +84,22 @@ figure img{
   height: 25px;
 }
 
+#toFullscreen{
+  position: fixed;
+  top: 5px;
+  right: 5px;
+  width: 32px;
+  height: 32px;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 98;
+  padding: 5px;
+  box-sizing: border-box;
+}
+
+#toFullscreen img{width: 100%}
+
+body:-webkit-full-screen #toFullscreen{
+  display: none;
+}
+
 .dnone{display:none !important}

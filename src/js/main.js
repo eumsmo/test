@@ -130,12 +130,14 @@ function resize_scene(){
 }
 //window.addEventListener("resize",resize_scene);
 
-/* Mobile Movement */
+/* Mobile Section */
 const mod = num=>num>=0?num:-num;
 let sx,sy, dir=[], touchRunning = false,
+    fsEl = document.querySelector("#toFullscreen"),
     touchEl = document.querySelector("#touch_visual"), touchSize = 35,
     mTouchEl = document.querySelector("#moving_touch"), mTouchSize = 25;
 document.addEventListener("touchstart",e=>{
+
   let t = e.touches[0], offset = touchSize/2;
   sx = t.pageX;
   sy = t.pageY;
@@ -176,4 +178,9 @@ function touchMove(){
 
   if(touchRunning)
   setTimeout(()=> touchMove(),CE);
+}
+
+if(navigator.maxTouchPoints>0){
+  fsEl.classList.remove("dnone");
+  fsEl.addEventListener('click',()=>document.body.requestFullscreen());
 }
