@@ -15,21 +15,11 @@ const run_scene = str => {
 
 let game_size = {};
 window.scene = {};
-Object.defineProperties(window.scene,{
-  width:{
-    set(val){
-      game_size.width = val;
-      return gameEl.style.width = val+'px';
-    },
-    get(){return gameEl.style.width}
-  }, height:{
-    set(val){
-      game_size.height = val;
-      return gameEl.style.height = val+'px';
-    },
-    get(){return gameEl.style.height}
-  }
-});
+
+function sceneSet(prop,val){
+  window.scene[prop] = val;
+  gameEl.style[prop] = val;
+}
 
 
 
@@ -131,7 +121,6 @@ function resize_scene(){
 //window.addEventListener("resize",resize_scene);
 
 /* Mobile Section */
-const mod = num=>num>=0?num:-num;
 let sx,sy, dir=[], touchRunning = false,
     fsEl = document.querySelector("#toFullscreen"),
     touchEl = document.querySelector("#touch_visual"), touchSize = 35,
@@ -153,6 +142,7 @@ document.addEventListener("touchstart",e=>{
   touchMove();
 })
 document.addEventListener("touchmove",e=>{
+  const mod = num=>num>=0?num:-num;
   let t = e.touches[0], offset = mTouchSize/2;
   let x = t.pageX, y = t.pageY;
 

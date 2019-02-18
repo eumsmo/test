@@ -1,4 +1,5 @@
-{ "height":15,
+{ "backgroundcolor":"#101010",
+ "height":15,
  "infinite":false,
  "layers":[
         {
@@ -397,7 +398,7 @@
                  "visible":true,
                  "width":53.3333333333333,
                  "x":37.3333333333333,
-                 "y":429.666666666667
+                 "y":428.666666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -429,37 +430,37 @@
             {
              "0":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/balloon.png",
+                 "image":"..\/img\/balloon.png",
                  "imageheight":620,
                  "imagewidth":300
                 },
              "1":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/logo.png",
+                 "image":"..\/img\/logo.png",
                  "imageheight":200,
                  "imagewidth":200
                 },
              "2":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/balloon.gif",
+                 "image":"..\/img\/balloon.gif",
                  "imageheight":620,
                  "imagewidth":300
                 },
              "6":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/sprite_0.png",
+                 "image":"..\/img\/sprite_0.png",
                  "imageheight":32,
                  "imagewidth":32
                 },
              "7":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/sprite_1.png",
+                 "image":"..\/img\/sprite_1.png",
                  "imageheight":32,
                  "imagewidth":32
                 },
              "8":
                 {
-                 "image":"E:\/Github\/test\/src\/img\/sprite_2.png",
+                 "image":"..\/img\/sprite_2.png",
                  "imageheight":32,
                  "imagewidth":32
                 }

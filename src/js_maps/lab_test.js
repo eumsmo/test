@@ -2,8 +2,9 @@
 // Tiled file converted by "compiler.html"
 // All made by "jv_eumsmo" (https://github.com/eumsmo)
 
-window.scene.width = 800;
-window.scene.height = 480;
+sceneSet("width","800px");
+sceneSet("height","480px");
+sceneSet("backgroundColor","#101010");
 const IMAGES = {
 	"1": "src/img/balloon.png",
 	"2": "src/img/logo.png",
@@ -13,6 +14,10 @@ const IMAGES = {
 	"9": "src/img/sprite_2.png"
 };
 window.IMAGES = IMAGES;
+const TRACKS = {};
+window.TRACKS = TRACKS;
+const SPAWNS = {};
+window.SPAWNS = SPAWNS;
 let aux;
 aux=new Decoration({x:253,y:-22,width:300,height:620,src:IMAGES["1"]});
 eventElementInit(aux,{"#${ballons}>=4":"$delete, $end"});
@@ -197,4 +202,4 @@ new InvisibleWall({x:672,y:416,width:32,height:32});
 new InvisibleWall({x:672,y:32,width:32,height:32});
 new InvisibleWall({x:736,y:128,width:32,height:32});
 new InvisibleWall({x:416,y:224,width:288,height:32});
-window.char = new Char({x:37.3333333333333,y:376.3333333333337,width:53.3333333333333,height:53.3333333333333,src:IMAGES["2"]});
+window.char = new Char({x:37.3333333333333,y:375.3333333333337,width:53.3333333333333,height:53.3333333333333,src:IMAGES["2"]});

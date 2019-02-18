@@ -26,6 +26,21 @@ class Subscribe{
       if(el!=null) callback(el);
   }
 }
+
+class CEManager extends Subscribe{
+  constructor(){
+    super("CEAffected");
+    this.ce = CE;
+    this._updateSubs();
+  }
+
+  _updateSubs(){
+    this.each(function(sub){sub()});
+    setTimeout(()=> this._updateSubs(),this.ce);
+  }
+}
+const MainCE = new CEManager();
+
 class Teclado extends Subscribe{
   constructor(){
     super("keyboard");
@@ -34,8 +49,7 @@ class Teclado extends Subscribe{
     document.addEventListener("keyup",evt=>this._unpressed(evt.key));
     document.addEventListener("onfocusout",evt=>this._unpressed());
 
-    this.ce = CE; // calls every
-    this._updateSubs();
+    MainCE.insert(this._updateSubs.bind(this));
   }
   _pressed(key){
     this.pressedKeys[key] = true;
@@ -48,8 +62,6 @@ class Teclado extends Subscribe{
   _updateSubs(){
     let keys = Object.keys(this.pressedKeys);
     this.each(sub=>sub.keyPressed(keys));
-
-    setTimeout(()=> this._updateSubs(),this.ce);
   }
 
 }
@@ -201,16 +213,38 @@ class Sprite extends Hitbox{
     this.type = "sprite";
   }
 }
-class Char extends Sprite{
+class MovableSprite extends Sprite{
   constructor(o){
     super(o);
 
     this.dx = 0;
     this.dy = 0;
+    this.speed = 1;
+    this.watchedContexts = ['char'];
+
+    this.setGroup("main");
+  }
+
+  setDir(x,y){
+    this.dx = x;
+    this.dy = y;
+    this.move();
+  }
+  move(){
+    this.x += this.speed*this.dx;
+    this.update();
+    this.y += this.speed*this.dy;
+    this.update();
+  }
+}
+class Char extends MovableSprite{
+  constructor(o){
+    super(o);
+
     this.speed = 1.5;
     this.watchedContexts = ["main"];
     this.type = "char";
-
+    this.setGroup("char");
     Keyboard.insert(this);
   }
 
@@ -239,20 +273,9 @@ class Char extends Sprite{
 
     this.setDir(dx,dy);
   }
-  setDir(x,y){
-    this.dx = x;
-    this.dy = y;
-    this.move();
-  }
-  move(){
-    this.x += this.speed*this.dx;
-    this.update();
-    this.y += this.speed*this.dy;
-    this.update();
-  }
 
   collision_with_sprite({t,o,d,c}){
-    //console.log(t,o,d,c);
+    console.log(t,o,d,c);
     if(d=="v"){
       if(c<0)t.y = o.y+o.height;
       else if(c>0)t.y = o.y-t.height;

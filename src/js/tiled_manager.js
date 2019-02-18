@@ -38,9 +38,10 @@ function download(name){
 
   let file = MANAGER.generateFile(name),
       a = document.createElement('a');
-
-  a.href = "data:text/javascript;charset=utf-8,"+file;
+  console.log(file);
+  a.href = "data:text/javascript;charset=utf-8,"+ window.encodeURIComponent(file);
   a.download = name.slice(0,-2);
+  console.log(a.href);
   a.click();
 }
 
@@ -57,6 +58,7 @@ function test_scene(name){
 }
 
 function fileReady(name,evt){
+
   let str = evt.target.result;
   if(str!=undefined){
     MANAGER.addScene(name,JSON.parse(str));
@@ -112,6 +114,8 @@ class SceneManager {
     let scene = this.scenes[name] = {};
     scene.info = obj;
     scene.images = {};
+    scene.tracks = {};
+    scene.spawns = {};
     scene.tiles_size = {
       width: obj.tilewidth,
       height: obj.tileheight
@@ -126,8 +130,12 @@ class SceneManager {
       if(tset.tilecount==1)
         scene.images[i] = tset.image;
       else
-        for(let gid in tset.tiles)
-          scene.images[(Number(gid)+i)+""] = tset.tiles[gid].image;
+        for(let gid in tset.tiles){
+          let img = tset.tiles[gid].image;
+          if(img.startsWith("..")) img = 'src'+img.slice(2);
+          scene.images[(Number(gid)+i)+""] = img;
+        }
+
     });
 
   }
@@ -185,6 +193,10 @@ class SceneManager {
     } else if(object.type){
       type = object.type;
       if(type == "Char") beforeLine = "window.char = ";
+      else if(type == "track" || type == "spawn") {
+        this.actualScene[type+'s'][object.name] = object.polyline || {x:object.x,y:object.y};
+        return '';
+      }
     }
 
     if(object.properties) nextLine+='eventElementInit(aux,'+JSON.stringify(object.properties)+');\n';
@@ -215,8 +227,9 @@ class SceneManager {
 // Tiled file converted by "compiler.html"
 // All made by "jv_eumsmo" (https://github.com/eumsmo)
 
-window.scene.width = ${scene.width};
-window.scene.height = ${scene.height};
+sceneSet("width","${scene.width}px");
+sceneSet("height","${scene.height}px");
+sceneSet("backgroundColor","${scene.info.backgroundcolor}");
 `;
     const important = `let aux;
 `;
@@ -226,6 +239,10 @@ window.scene.height = ${scene.height};
 
     file = `const IMAGES = ${JSON.stringify(this.actualScene.images,null,'\t')};
 window.IMAGES = IMAGES;
+const TRACKS = ${JSON.stringify(this.actualScene.tracks,null,'\t')};
+window.TRACKS = TRACKS;
+const SPAWNS = ${JSON.stringify(this.actualScene.spawns,null,'\t')};
+window.SPAWNS = SPAWNS;
 ` + file;
 
     file = header + file;
