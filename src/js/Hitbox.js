@@ -1,313 +1,208 @@
-const CE = 10;
-class Subscribe{
-  constructor(name){
-    this.in = [];
-    this.name = name;
-  }
+import {Collisions, Result} from '../Collisions.mjs';
 
-  _insert(el,index){
-    this.in[index] = el;
-    el["subscribed_"+this.name+"_id"] = index;
-    el["unsubscribe_"+this.name] = ()=> this.remove(index);
-    return index;
-  }
+const SYSTEM = new Collisions(),
+      RESULT = new Result(),
+      ALL_HITBOXES = {};
 
-  insert(el){
-    let i;
-    for(i=0;i<this.in.length;i++)
-      if(this.in[i]==null) return this._insert(el,i);
-    return this._insert(el,i);
-  }
+let pressedLog = [], lastPressed;
+const pressedKeys = ()=> Object.keys(pressedLog);
+const rand = (min,max) =>Math.floor(Math.random()*(max-min+1)+min);
 
-  remove(i){return (this.in[i] = null)}
-
-  each(callback){
-    for(let el of this.in)
-      if(el!=null) callback(el);
-  }
+document.body.addEventListener("keydown",evt=>{
+  let k = evt.key;
+  lastPressed = k;
+  pressedLog[k] = true;
+});
+document.body.addEventListener("keypress",()=> keyPressed(pressedKeys()));
+document.body.addEventListener("keyup",evt=>{
+  let k = evt.key;
+  delete pressedLog[k];
+});
+function animationSetup(...args){
+  draw(...args);
+  window.requestAnimationFrame(animationSetup);
 }
-
-class CEManager extends Subscribe{
-  constructor(){
-    super("CEAffected");
-    this.ce = CE;
-    this._updateSubs();
-  }
-
-  _updateSubs(){
-    this.each(function(sub){sub()});
-    setTimeout(()=> this._updateSubs(),this.ce);
-  }
-}
-const MainCE = new CEManager();
-
-class Teclado extends Subscribe{
-  constructor(){
-    super("keyboard");
-    this.pressedKeys = {};
-    document.addEventListener("keydown",evt=>this._pressed(evt.key));
-    document.addEventListener("keyup",evt=>this._unpressed(evt.key));
-    document.addEventListener("onfocusout",evt=>this._unpressed());
-
-    MainCE.insert(this._updateSubs.bind(this));
-  }
-  _pressed(key){
-    this.pressedKeys[key] = true;
-  }
-  _unpressed(key){
-    if(key!=undefined) delete this.pressedKeys[key];
-    else for(let key in this.pressedKeys) delete this.pressedKeys[key];
-  }
-
-  _updateSubs(){
-    let keys = Object.keys(this.pressedKeys);
-    this.each(sub=>sub.keyPressed(keys));
-  }
-
-}
-const Keyboard = new Teclado();
-
-class GroupsManager{
-  constructor(){
-    this.groups = {};
-  }
-
-  create(name){
-    this.groups[name] = new Subscribe("group_"+name);
-    return this.groups[name];
-  }
-  get(name){return this.groups[name].in}
-  add(name,el){
-    if(this.groups[name]){
-      el.group = name;
-      return this.groups[name].insert(el);
-    }
-  }
-}
-const GROUPS = new GroupsManager();
-GROUPS.create("decoration");
-GROUPS.create("main");
-GROUPS.create("char");
-
+window.requestAnimationFrame(animationSetup);
 
 let DISPLAY_SCALE = 1;
-let HITBOXES_last_id = 0;
-const ALL_HITBOXES = {};
-class Hitbox{
-  constructor(o){
-    this.x = o.x || 0;
-    this.y = o.y || 0;
-    this.width = o.width || 0;
-    this.height = o.height || 0;
-
-    this.lx = 0;
-    this.ly = 0;
-    this.watchedContexts = [];
-
-    this.type = "none";
-    this.el;
-    this.$hitbox_id = HITBOXES_last_id;
-    ALL_HITBOXES[this.$hitbox_id] = this;
-    HITBOXES_last_id++;
-  }
-
-  display(){
-    this.el.style.left = DISPLAY_SCALE*this.x+'px';
-    this.el.style.top = DISPLAY_SCALE*this.y+'px';
-    this.el.style.height = DISPLAY_SCALE*this.height+'px';
-    this.el.style.width = DISPLAY_SCALE*this.width+'px';
-  }
-  setDisplay(el){
-    this.el = el;
-    this.display();
-  }
-
-  update(){
-    this.handleMove();
-    this.display();
-  }
-
-  // Collsion Stuff
-  isOverH(o){
-    let reg = this.y+this.height>o.y && this.y<o.y+o.height,
-        a = this.x<o.x&&this.x+this.width>o.x,
-        b = this.x<o.x+o.width&&this.x+this.width>o.x+o.width;
-
-    return reg&&a || reg&&b;
-  } //is overlapping verticaly
-  isOverV(o){
-    let reg = this.x+this.width>o.x && this.x<o.x+o.width,
-        a = this.y<o.y&&this.y+this.height>o.y,
-        b = this.y<o.y+o.height&&this.y+this.height>o.y+o.height;
-
-    return reg&&a || reg&&b;
-  }// is overlapping horizontaly
-
-  isOverlapingOther(other,vorh){
-
-    return vorh=='h'? this.isOverH(other) : this.isOverV(other);
-  }
-  isItself(other){
-    return this.$hitbox_id == other.$hitbox_id;
-  }
-  isOverlapingGroup(groupName,vorh,callback){
-    let groupItens = GROUPS.get(groupName);
-    for(let el of groupItens)
-      if(el && !this.isItself(el) && this.isOverlapingOther(el,vorh))
-        callback(el);
-  }
-  isOverlaping(vorh,callback){
-    for(let group of this.watchedContexts)
-      this.isOverlapingGroup(group,vorh,callback);
-  }
-  _handleMove(vorh,coef){
-    this.isOverlaping(vorh,o =>{
-      if(this["collision_with_"+o.type])
-        this["collision_with_"+o.type]({o: o, d: vorh, t: this, c: coef});
-      if(o["collision_with_"+this.type])
-        o["collision_with_"+this.type]({o: this, d: vorh, t: o, c: -coef});
-    });
-  }
-  setCollisionEvent(collisionWith,call){
-    return this["collision_with_"+collisionWith] = call;
-  }
-  handleMove(dir){
-
-    if(this.x!=this.lx){
-      this._handleMove('h',this.x-this.lx);
-      this.lx = this.x;
-    }
-    else if(this.y!=this.ly){
-      this._handleMove('v',this.y-this.ly);
-      this.ly = this.y;
-    }
-  }
-
-  // Group Stuff
-  setGroup(name){
-    if(this.group) this["unsubscribe_group_"+this.group]();
-    GROUPS.add(name,this);
-  }
-  destroySelf(){
-    for(let prop in this)
-      if(prop.startsWith("unsubscribe_")) this[prop]();
-    delete ALL_HITBOXES[this.$hitbox_id];
-    this.el.remove();
-  }
-}
 const change_scale = scale=> {
   DISPLAY_SCALE = scale;
   for(let h in ALL_HITBOXES) ALL_HITBOXES[h].display();
 };
-
 const game_block = document.querySelector("#game");
-class Sprite extends Hitbox{
-  constructor(o){
-    super(o); // x, y, width, height
-    let img = new Image(o.width,o.height);
-    img.src = o.src;
-    img.classList.add("sprite");
-    this.setDisplay(img);
-    game_block.appendChild(img);
 
-    this.type = "sprite";
-  }
+
+
+function draw(){
+  for(let h in ALL_HITBOXES)
+    ALL_HITBOXES[h].update();
+  SYSTEM.update();
 }
-class MovableSprite extends Sprite{
-  constructor(o){
-    super(o);
+
+function keyPressed(keys){
+  let res = [0,0];//[x,y]
+  keys.forEach(k=>{
+    if(k=='a') res[0]--;
+    if(k=='d') res[0]++;
+    if(k=='w') res[1]--;
+    if(k=='s') res[1]++;
+  });
+
+  main.dx = res[0];
+  main.dy = res[1];
+}
+
+
+class Hitbox{
+  constructor(x,y,is,arg){
+    if(is=="polygon") this.object = SYSTEM.createPolygon(x,y,arg);
+    else if(is=="circle") this.object = SYSTEM.createCircle(x,y,arg);
 
     this.dx = 0;
     this.dy = 0;
-    this.speed = 1;
-    this.watchedContexts = ['char'];
+    this.s = 1;
 
-    this.setGroup("main");
+    this.watchedContexts = [];
+    this.type = "none";
+    this.el;
+    this.$id = Symbol();
+
+    ALL_HITBOXES[this.$id] = this;
   }
 
-  setDir(x,y){
-    this.dx = x;
-    this.dy = y;
-    this.move();
+
+    get x(){return this.object.x}
+    get y(){return this.object.y}
+    set x(val){return this.object.x=val}
+    set y(val){return this.object.y=val}
+
+    display(){
+      //CONTEXT.strokeStyle = "#008b8b";
+      //drawu(()=>this.object.draw(CONTEXT));
+      /*
+      this.el.style.left = DISPLAY_SCALE*this.x+'px';
+      this.el.style.top = DISPLAY_SCALE*this.y+'px';
+      this.el.style.height = DISPLAY_SCALE*this.height+'px';
+      this.el.style.width = DISPLAY_SCALE*this.width+'px';
+      */
+    }
+    move(){
+      this.x += this.s*this.dx;
+      this.y += this.s*this.dy;
+    }
+    collisionResponse(){
+      this.x -= RESULT.overlap * RESULT.overlap_x;
+      this.y -= RESULT.overlap * RESULT.overlap_y;
+    }
+    collide(){
+      const obj = this.object;
+      const potentials = obj.potentials();
+
+      for(const body of potentials) {
+          if(obj.collides(body,RESULT)) {
+            this.collisionResponse(RESULT);
+          }
+      }
+    }
+    update(){
+      this.move();
+      this.collide();
+      this.display();
+    }
+
+    setGroup(name){
+      if(this.group) this["unsubscribe_group_"+this.group]();
+      GROUPS.add(name,this);
+    }
+    destroySelf(){
+      for(let prop in this)
+        if(prop.startsWith("unsubscribe_")) this[prop]();
+      delete ALL_HITBOXES[this.$hitbox_id];
+      this.el.remove();
+    }
+}
+class Box extends Hitbox{
+  constructor(x,y,w,h){
+    super(x,y,"polygon",[[0,0],[w,0],[w,h],[0,h]]);
   }
-  move(){
-    this.x += this.speed*this.dx;
-    this.update();
-    this.y += this.speed*this.dy;
-    this.update();
+
+  display(){
+    this.el.style.width = this.w+"px";
+    this.el.style.height = this.h+"px";
+    this.el.style.top = this.y+"px";
+    this.el.style.left = this.x+"px";
   }
 }
-class Char extends MovableSprite{
-  constructor(o){
-    super(o);
-
-    this.speed = 1.5;
-    this.watchedContexts = ["main"];
-    this.type = "char";
-    this.setGroup("char");
-    Keyboard.insert(this);
+class HitC extends Hitbox{
+  constructor(x,y,r){
+    super(x,y,"circle",r);
+    this.el = document.createElement("div");
+    this.el.style.position = "fixed";
+    this.el.style.border = "1px solid red";
+    this.el.style.boxSizing = "border-box";
+    this.el.style.borderRadius = "50%";
+    this.r = r;
+    this.w = r*2;
+    this.h = r*2;
+    document.body.appendChild(this.el);
   }
 
-  _keyTranslate(key){
-    let controls = {
-      up: ["w","W","ArrowUp"],
-      left: ["a","A","ArrowLeft"],
-      down: ["s","S","ArrowDown"],
-      right: ["d","D","ArrowRight"]
-    };
-
-    for(let d in controls)
-      for(let k of controls[d])
-        if(k==key) return d;
-    return null;
+  display(){
+    super.display();
+    this.el.style.width = this.w+"px";
+    this.el.style.height = this.h+"px";
+    this.el.style.top = (this.y)-this.r+"px";
+    this.el.style.left = (this.x)-this.r+"px";
   }
-  keyPressed(keys){
-    let directions = keys.map(k=>this._keyTranslate(k));
-    let dx=0, dy=0;
-    directions.forEach(d=>{
-      if(d=='left') dx--;
-      else if(d=='right') dx++;
-      else if(d=='up') dy--;
-      else if(d=='down') dy++;
-    });
-
-    this.setDir(dx,dy);
-  }
-
-  collision_with_sprite({t,o,d,c}){
-    console.log(t,o,d,c);
-    if(d=="v"){
-      if(c<0)t.y = o.y+o.height;
-      else if(c>0)t.y = o.y-t.height;
-    }
-    else if(d=="h"){
-      if(c<0)t.x = o.x+o.width;
-      else if(c>0)t.x = o.x-t.width;
-    }
-  }
-
-  collision_with_block(details){return this.collision_with_sprite(details)}
-
 }
-
-// Tiled_Manager Classes
-class InvisibleWall extends Hitbox{
-  constructor(details){
-    super(details);
-    let div = document.createElement('div');
-    this.setDisplay(div);
+class Wall extends Box{
+  constructor(...args){
+    super(...args);
 
     this.type = "block";
-    this.setGroup("main");
     this.watchedContexts = ['char'];
-    div.classList.add("col");
-    game_block.appendChild(div);
+
+    this.el = document.createElement('div');
+    this.el.classList.add("col");
+
+    game_block.appendChild(this.el);
   }
+
+  collide(){}
+}
+
+class Sprite extends Box{
+  constructor(x,y,w,h,src){
+    super(x,y,w,h);
+
+    this.type = "sprite";
+    this.watchedContexts = ['char'];
+
+    this.el = new Image(w,h);
+    this.el.src = src;
+    this.el.classList.add("sprite");
+
+    game_block.appendChild(this.el);
+  }
+
 }
 class Decoration extends Sprite{
-  constructor(details){
-    super(details);
-    this.setGroup('decoration');
+  constructor(...args){
+    super(...args);
     this.watchedContexts = [];
   }
 }
+class Char extends Sprite{
+  constructor(...args){
+    super(...args);
+
+    this.type = "char";
+    this.watchedContexts = ["main"];
+    this.speed = 1.5;
+  }
+}
+
+// Save as Global
+Object.assign(window,{
+  Hitbox, Box, HitC, Wall, Sprite, Decoration, Char, ALL_HITBOXES, draw, keyPressed
+});

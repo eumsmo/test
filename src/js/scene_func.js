@@ -1,3 +1,8 @@
+// Replacers
+const sv_replacer = vname=> `scene_variables["${vname}"]`;
+const sv_func_replacer = (fname,params)=> `sv_func["${fname}"](${params.join(',')})`;
+const sv_ncfunc_replacer = fname=> `sv_func["${fname}"]`;
+
 let sv_cond_callbacks = {};
 
 let sv = {},
@@ -63,7 +68,7 @@ function eventElementInit(element,obj){
       events = [];
 
   if(!element.type) element.type = "event";
-  const parseVariables = line => line.replace(/\${([^}]*)}/g,(a,prop)=>`scene_variables["${prop}"]`);
+  const parseVariables = line => line.replace(/\${([^}]*)}/g,(a,prop)=>sv_replacer(prop));
   const getVariables = line =>{
     let props = {}, arr =[];
     line.replace(/\${([^}]*)}/g,(a,prop)=>props[prop] = true);
@@ -78,12 +83,12 @@ function eventElementInit(element,obj){
       params.push(...prop.slice(1,-1).split(','));
     });
     str = str.replace(/\([^\)]*\)/g,"");
-    str = `sv_func["${str.slice(1)}"](${params.join(',')})`;
+    str = sv_func_replacer(str.slice(1),params);
     return str;
   }
 
   const ncFunctionExp = /\$([^\,\=\)\(\s]*)/g;
-  const parseNCFunction = str => str.replace(ncFunctionExp,(a,prop)=>`sv_func["${prop}"]`);
+  const parseNCFunction = str => str.replace(ncFunctionExp,(a,prop)=>sv_ncfunc_replacer(prop));
 
   for (let p in prop){
     let op = p, arg = prop[p]+'', aux;
@@ -146,6 +151,8 @@ function setSceneFunction(name,callback){
   sv_func[name] = callback;
 }
 
+// a
+
 setSceneFunction("constWalk",function(d){
   let dir = {"down":[0,1]}, el = this.$this;
   el.setDir(...dir[d]);
@@ -160,7 +167,8 @@ const dist4 = (x1,y1,x2,y2)=>{
 
 setSceneFunction("setTrack",function(trackName){
   let track = TRACKS[trackName], el = this.$this;
-  el.speed = 0.5;
+  //el.speed = 0.5;
+  el.speed=1;
   moveTrack(el,track,0);
 });
 
