@@ -129,8 +129,10 @@ function eventElementInit(element,obj){
   }
 
   if(events.length!=0){
-    element.setGroup("main");
+    if(element.group == "decoration")
+      element.group = "main";
     function whenActive(details,el,events){
+      console.log("aaaa");
       console.log(details,events);
       events.forEach(evt=> {
         sv_func.$other = details.o;
@@ -140,9 +142,7 @@ function eventElementInit(element,obj){
       });
     }
     console.log(events);
-    active_with.forEach(type=>{
-      element.setCollisionEvent(type,details=>whenActive(details,element,events));
-    });
+    element.setCollisionEvent(details=>whenActive(details,element,events));
   }
 }
 
@@ -199,7 +199,8 @@ function moveTrack(el,track,currentTrack){
   dx=(distx>=0)?mod(dx):nmod(dx);
   dy=(disty>=0)?mod(dy):nmod(dy);
 
-  el.setDir(dx,dy);
+  el.dx = dx
+  el.dy = dy;
 
 /*
   console.log("current_i: ",currentTrack);
@@ -208,12 +209,12 @@ function moveTrack(el,track,currentTrack){
   console.log(dx,dy,'-',nx,ny);
 */
 
-  let h = setInterval(()=>{
+  let s = addConstantUpdate(()=>{
     el.move();
     //console.log(el.x,nx,'-',el.y,ny);
     if(roundD(el.x,2)==nx && roundD(el.y,2)==ny){
-      clearInterval(h);
+      removeConstantUpdate(s);
       moveTrack(el,track,currentTrack+1==track.length? 0:currentTrack+1);
     }
-  },CE);
+  });
 }

@@ -164,14 +164,13 @@ class SceneManager {
     return lines;
   }
   _genLine(type,details){
-    let line = `new ${type}({`;
+    let line = `new ${type}(`;
     for(let d in details){
-      line+=d+':';
       if(d=='src') line += 'IMAGES["'+details[d]+'"]';
       else line+=details[d];
       line+=',';
     }
-    return line.slice(0,-1) + "});\n";
+    return line.slice(0,-1) + ");\n";
   }
   _objectOrganize(object,layer){
     let nextLine = "", beforeLine="", details, type;
@@ -186,7 +185,7 @@ class SceneManager {
     if(!object.type){
       if(object.gid)type = "Decoration";
       else{
-        type = "InvisibleWall";
+        type = "Wall";
         details.y += object.height;
       }
 

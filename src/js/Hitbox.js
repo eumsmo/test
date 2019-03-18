@@ -1,10 +1,8 @@
-import {Collisions, Result} from '../Collisions.mjs';
-
 const SYSTEM = new Collisions(),
       RESULT = new Result(),
-      ALL_HITBOXES = {};
+      ALL_HITBOXES = {}, GROUPS = {};
 
-let pressedLog = [], lastPressed;
+let pressedLog = [], lastPressed, main;
 const pressedKeys = ()=> Object.keys(pressedLog);
 const rand = (min,max) =>Math.floor(Math.random()*(max-min+1)+min);
 
@@ -17,6 +15,7 @@ document.body.addEventListener("keypress",()=> keyPressed(pressedKeys()));
 document.body.addEventListener("keyup",evt=>{
   let k = evt.key;
   delete pressedLog[k];
+  keyPressed(pressedKeys())
 });
 function animationSetup(...args){
   draw(...args);
@@ -32,13 +31,27 @@ const change_scale = scale=> {
 const game_block = document.querySelector("#game");
 
 
+function everySymbolObj(obj,call){
 
-function draw(){
-  for(let h in ALL_HITBOXES)
-    ALL_HITBOXES[h].update();
-  SYSTEM.update();
+  Object.getOwnPropertySymbols(obj).forEach(s=>call(obj[s]));
+}
+const everyHitbox = (call)=> everySymbolObj(ALL_HITBOXES,call);
+
+const CONSTANT_UPDATE = {};
+function addConstantUpdate(call){
+  let s = Symbol();
+  CONSTANT_UPDATE[s] = call;
+  return s;
+}
+function removeConstantUpdate(s){
+  return delete CONSTANT_UPDATE[s];
 }
 
+function draw(){
+  everyHitbox(hitbox=> hitbox.update());
+  everySymbolObj(CONSTANT_UPDATE,x=>x());
+  SYSTEM.update();
+}
 function keyPressed(keys){
   let res = [0,0];//[x,y]
   keys.forEach(k=>{
@@ -52,7 +65,7 @@ function keyPressed(keys){
   main.dy = res[1];
 }
 
-
+// args: x, y, is, args
 class Hitbox{
   constructor(x,y,is,arg){
     if(is=="polygon") this.object = SYSTEM.createPolygon(x,y,arg);
@@ -63,10 +76,14 @@ class Hitbox{
     this.s = 1;
 
     this.watchedContexts = [];
+    this.group = "main";
     this.type = "none";
-    this.el;
     this.$id = Symbol();
+    this.el;
 
+    this.responses = [];
+
+    this.object.self = this;
     ALL_HITBOXES[this.$id] = this;
   }
 
@@ -99,7 +116,9 @@ class Hitbox{
       const potentials = obj.potentials();
 
       for(const body of potentials) {
-          if(obj.collides(body,RESULT)) {
+          if(this.watchedContexts.includes(body.self.group) && obj.collides(body,RESULT)) {
+            for(let res of this.responses) res(RESULT);
+            for(let res of body.self.responses) res(RESULT);
             this.collisionResponse(RESULT);
           }
       }
@@ -109,18 +128,16 @@ class Hitbox{
       this.collide();
       this.display();
     }
-
-    setGroup(name){
-      if(this.group) this["unsubscribe_group_"+this.group]();
-      GROUPS.add(name,this);
+    setCollisionEvent(call){
+      this.responses.push(call);
     }
     destroySelf(){
-      for(let prop in this)
-        if(prop.startsWith("unsubscribe_")) this[prop]();
-      delete ALL_HITBOXES[this.$hitbox_id];
-      this.el.remove();
+      if(this.el) this.el.remove();
+      this.object.remove();
+      delete ALL_HITBOXES[this.$id];
     }
 }
+// args: x, y, w, h
 class Box extends Hitbox{
   constructor(x,y,w,h){
     super(x,y,"polygon",[[0,0],[w,0],[w,h],[0,h]]);
@@ -133,6 +150,7 @@ class Box extends Hitbox{
     this.el.style.left = this.x+"px";
   }
 }
+// args: x, y, r
 class HitC extends Hitbox{
   constructor(x,y,r){
     super(x,y,"circle",r);
@@ -155,6 +173,7 @@ class HitC extends Hitbox{
     this.el.style.left = (this.x)-this.r+"px";
   }
 }
+// args: x, y, w, h
 class Wall extends Box{
   constructor(...args){
     super(...args);
@@ -169,8 +188,17 @@ class Wall extends Box{
   }
 
   collide(){}
+
+  display(){
+    super.display();
+    this.el.style.left = DISPLAY_SCALE*this.x+'px';
+    this.el.style.top = DISPLAY_SCALE*this.y+'px';
+    this.el.style.height = DISPLAY_SCALE*this.height+'px';
+    this.el.style.width = DISPLAY_SCALE*this.width+'px';
+  }
 }
 
+// args: x, y, w, h, src
 class Sprite extends Box{
   constructor(x,y,w,h,src){
     super(x,y,w,h);
@@ -185,24 +213,40 @@ class Sprite extends Box{
     game_block.appendChild(this.el);
   }
 
+  display(){
+    super.display();
+    this.el.style.left = DISPLAY_SCALE*this.x+'px';
+    this.el.style.top = DISPLAY_SCALE*this.y+'px';
+    this.el.style.height = DISPLAY_SCALE*this.height+'px';
+    this.el.style.width = DISPLAY_SCALE*this.width+'px';
+  }
+
 }
 class Decoration extends Sprite{
+
   constructor(...args){
     super(...args);
+
+    this.group = "decoration";
     this.watchedContexts = [];
   }
+
+  collide(){}
+
 }
 class Char extends Sprite{
   constructor(...args){
     super(...args);
 
+    this.group = "char";
     this.type = "char";
     this.watchedContexts = ["main"];
     this.speed = 1.5;
+
+    main = this;
   }
 }
-
-// Save as Global
-Object.assign(window,{
-  Hitbox, Box, HitC, Wall, Sprite, Decoration, Char, ALL_HITBOXES, draw, keyPressed
-});
+class MovableSprite extends Sprite{
+  constructor(...args){super(...args)}
+  collide(){}
+}
