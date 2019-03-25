@@ -110,9 +110,24 @@ class SceneManager {
     this.actualScene = {};
   }
 
+  organizeTileset(tile,id){
+    let img = tile.image, scene = this.actualScene,
+        info = scene.grids[id+""] = {};;
+    if(img.startsWith("..")) img = 'src'+img.slice(2);
+    scene.images[id+""] = img;
+
+    if(tile.objectgroup){
+      let hs = tile.objectgroup.objects, h = hs[0].polygon,arr=[];
+
+      h.forEach(p=>arr.push([p.x,p.y]));
+      info.hitbox = arr;
+    }
+  }
+
   addScene(name,obj){
     let scene = this.scenes[name] = {};
     scene.info = obj;
+    scene.grids = {};
     scene.images = {};
     scene.tracks = {};
     scene.spawns = {};
@@ -122,18 +137,16 @@ class SceneManager {
     };
     scene.width = scene.info.width * scene.tiles_size.width;
     scene.height = scene.info.height * scene.tiles_size.height;
+    this.actualScene = scene;
 
     // Load images
     obj.tilesets.forEach(tset=>{
       let i = tset.firstgid;
 
-      if(tset.tilecount==1)
-        scene.images[i] = tset.image;
+      if(tset.tilecount==1) this.organizeTileset(tset,i);
       else
         for(let gid in tset.tiles){
-          let img = tset.tiles[gid].image;
-          if(img.startsWith("..")) img = 'src'+img.slice(2);
-          scene.images[(Number(gid)+i)+""] = img;
+          this.organizeTileset(tset.tiles[gid],Number(gid)+i);
         }
 
     });
@@ -167,9 +180,10 @@ class SceneManager {
     let line = `new ${type}(`;
     for(let d in details){
       if(d=='src') line += 'IMAGES["'+details[d]+'"]';
-      else line+=details[d];
+      else line+= (typeof details[d] == "object")? JSON.stringify(details[d]): details[d];
       line+=',';
     }
+    console.log(line);
     return line.slice(0,-1) + ");\n";
   }
   _objectOrganize(object,layer){
@@ -177,10 +191,18 @@ class SceneManager {
 
     details = {
       x: object.x , y: object.y - object.height,
-      width: object.width, height: object.height
+      args:{w: object.width, h: object.height}
     };
 
-    if(object.gid) details.src = object.gid;
+
+
+    if(object.gid){
+      let info = this.actualScene.grids[object.gid];
+      details.src = object.gid;
+      if(info && info.hitbox){
+        details.args.p = info.hitbox;
+      }
+    }
 
     if(!object.type){
       if(object.gid)type = "Decoration";

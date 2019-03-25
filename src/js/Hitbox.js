@@ -71,6 +71,7 @@ class Hitbox{
     if(is=="polygon") this.object = SYSTEM.createPolygon(x,y,arg);
     else if(is=="circle") this.object = SYSTEM.createCircle(x,y,arg);
 
+    console.log(is,arg,this.object);
     this.dx = 0;
     this.dy = 0;
     this.s = 1;
@@ -198,10 +199,22 @@ class Wall extends Box{
   }
 }
 
-// args: x, y, w, h, src
-class Sprite extends Box{
-  constructor(x,y,w,h,src){
-    super(x,y,w,h);
+
+
+// args: x, y, args, src
+// if args.p:
+//    is = polygon(p)
+// else:
+//    is = rect(w,h)
+//
+
+class Sprite extends Hitbox{
+  constructor(x,y,{p,w,h},src){
+    if(p){
+      console.log(p);
+      super(x,y,"polygon",p);
+    }
+    else super(x,y,"polygon",Sprite.boxToPolygon(w,h));
 
     this.type = "sprite";
     this.watchedContexts = ['char'];
@@ -221,6 +234,9 @@ class Sprite extends Box{
     this.el.style.width = DISPLAY_SCALE*this.width+'px';
   }
 
+  static boxToPolygon(w,h){
+    return [[0,0],[w,0],[w,h],[0,h]];
+  }
 }
 class Decoration extends Sprite{
 
