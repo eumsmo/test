@@ -1,7 +1,7 @@
 # Tiled e o mapa
 O mapa utilizado pela engine é feito através do Tiled, através de propriedades customizadas e "type".  A documentação sobre as propriedades customizadas pode ser encontrada [aqui](https://github.com/eumsmo/test/blob/master/src/scene_variables.md).
 
-Após completo, o mapa deve ser exportado com '.json' e aberto no site [compiled.html](https://eumsmo.github.io/test/compiled.html), onde será convertido em um arquivo '.js' adequado a engine.
+Após completo, o mapa deve ser exportado com '.json' e aberto no site [compiler.html](https://eumsmo.github.io/test/compiler.html), onde será convertido em um arquivo '.js' adequado a engine.
 
 ## Em breve:
 - Documentação do Tiled
